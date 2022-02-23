@@ -32,6 +32,9 @@ jobs:
       - name:  Create IAM Policy files
         run: |
           python ./src/CreateIAMPolicyFromCFn.py -i ./CFn -o ./IAMPolicyFiles
+      - name: build check
+        run: |
+          ls -R
       - name: Archive IAM Policy files
         uses: actions/upload-artifact@v2
         with:
