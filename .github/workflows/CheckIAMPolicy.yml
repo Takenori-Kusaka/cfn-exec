@@ -26,6 +26,7 @@ jobs:
           role-to-assume: ${{secrets.ROLE_ARN}}
           role-session-name: ReadOnlyRole
           aws-region: ${{env.AWS_REGION}}
+      - run: aws sts get-caller-identity
       - name:  Create IAM Policy files
         run: |
           sh ./CreateIAMPolicy.sh
