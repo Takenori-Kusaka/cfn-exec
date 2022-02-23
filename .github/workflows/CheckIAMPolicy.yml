@@ -3,7 +3,7 @@ on:
   push
 env:
   AWS_REGION : ${{secrets.AWS_REGION}}
- 
+
 permissions:
   id-token: write
 
@@ -11,13 +11,15 @@ jobs:
   CreateIAMPolicy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Git clone the repository
+        uses: actions/checkout@v2
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
           architecture: 'x64'
       - name: Get Python version
+        run: python -V
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@master
         with:
