@@ -34,7 +34,7 @@ result = {
 for typename in only_typename_list:
     cmd = "sh ./src/GetSchema.sh " + typename
     print(cmd)
-    p = subprocess.run(cmd.split(" "))
+    p = subprocess.run(cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     type_actions = p.stdout.decode("utf-8")
     print(type_actions)
     type_actions_dict = {}
