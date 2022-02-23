@@ -9,25 +9,25 @@ pip install cfnlp
 # Run
 echo "Start to create IAM Policy files"
 echo "Export dir: IAMPoliciyFiles"
-dirpath = "./IAMPoliciyFiles/"
+DIRPATH="./IAMPoliciyFiles/"
 
 find . -name "*.json" | while read -r fname
 do
   echo "Find: $fname"
-  echo "Export: $dirpath`basename $fname`-IAMPolicy.json"
-  cfnlp -i $fname | tee $dirpath`basename $fname`-IAMPolicy.json
+  echo "Export: $DIRPATH`basename $fname`-IAMPolicy.json"
+  cfnlp -i $fname | tee $DIRPATH`basename $fname`-IAMPolicy.json
 done
 
 find . -name "*.yaml" | while read -r fname
 do
   echo "Find: $fname"
-  echo "Export: $dirpath`basename $fname`-IAMPolicy.json"
-  cfnlp -i $fname | tee $dirpath`basename $fname`-IAMPolicy.json
+  echo "Export: $DIRPATH`basename $fname`-IAMPolicy.json"
+  cfnlp -i $fname | tee $DIRPATH`basename $fname`-IAMPolicy.json
 done
 
 find . -name "*.yml" | while read -r fname
 do
   echo "Find: $fname"
-  echo "Export: $dirpath`basename $fname`-IAMPolicy.json"
-  cfnlp -i $fname | tee $dirpath`basename $fname`-IAMPolicy.json
+  echo "Export: $DIRPATH`basename $fname`-IAMPolicy.json"
+  cfnlp -i $fname | tee $DIRPATH`basename $fname`-IAMPolicy.json
 done
