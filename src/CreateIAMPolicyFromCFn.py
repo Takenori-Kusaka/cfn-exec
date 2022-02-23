@@ -140,7 +140,7 @@ def main():
         required=True,
         type=str,
         action="store",
-        dest="output_folderpath",
+        dest="output_folder",
         help="Output IAM policy files root folder",
         default="./IAMPolicyFiles"
     )
