@@ -30,3 +30,8 @@ jobs:
       - name:  Create IAM Policy files
         run: |
           sh ./CreateIAMPolicy.sh
+      - name: Archive IAM Policy files
+        uses: actions/upload-artifact@v2
+        with:
+          name: IAM Policy files
+          path: IAMPoliciyFiles
