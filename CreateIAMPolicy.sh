@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Setup
+pip install pyyaml
 echo "Setup cfn_flip"
 # pip install cfn_flip
 echo "Setup cfn_flip"
