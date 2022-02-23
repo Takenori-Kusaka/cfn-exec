@@ -1,17 +1,20 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Running Github Actions workflow with read only access to AWS
 
-Metadata:
-  ParameterGroups:
-    - Label: 
-        default: Github
-      Parameters:
-        - GitHubOrg
-        - RepositoryName
-    - Label: 
-        default: OIDC
-      Parameters:
-        - OIDCProviderArn
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "GitHub"
+        Parameters: 
+          - GitHubOrg
+          - RepositoryName
+      - 
+        Label: 
+          default: "OIDC Provider"
+        Parameters: 
+          - OIDCProviderArn
 
 Parameters:
   GitHubOrg:
