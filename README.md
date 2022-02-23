@@ -1,6 +1,6 @@
 # AWSPolicyCheckerFromCFn
 
-Cloudformationファイルから必要なIAMポリシーを自動的に抽出する
+Automatically extract the required IAM policies from your Cloudformation file
 
 ![](img/architecture.drawio.svg)
 
@@ -11,7 +11,12 @@ Cloudformationファイルから必要なIAMポリシーを自動的に抽出す
 ```sh
 pip3 install cpyyaml
 ```
-3. Check the IAM Policy required to execute the cloudformation file
+3. Clone this repository
+```sh
+git clone https://github.com/Takenori-Kusaka/AWSPolicyCheckerFromCFn.git
+cd AWSPolicyCheckerFromCFn
+```
+4. Check the IAM Policy required to execute the cloudformation file
 ```sh
 python src/CreateIAMPolicyFromCFn.py $yourcfn $exportfolder
 ```
