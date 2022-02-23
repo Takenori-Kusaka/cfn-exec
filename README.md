@@ -35,15 +35,25 @@ cfnlp -i file.yml
 
 1. Open Cloudformation on your AWS Account.
 2. Create stack from [GithubOIDCRole-ReadOnly.yml](./GithubOIDCRole-ReadOnly.yml).
+3. Make a note the Roke-Arn created from stack and region's name having stack.
 
-### 3. Commit and Push your Cloudformation file
+### 3. Register Role-Arn and region name to Github sercrets
+
+1. View Github Actions page on your repository.
+2. Register following list to Github secrets.
+  * NAME: AWS_REGION, VALUE: your region's name having stack
+  * NAME: ROLE_ARN, VALUE: your Roke-Arn created from stack
+
+### 4. Commit and Push your Cloudformation file
 
 1. Add your Cloudformation file in [CFn](./CFn/) folder.
 2. Commit and Push your repository.
 
-### 4. Check artifacts on Github Actions
+### 5. Check artifacts on Github Actions
 
 1. View Github Actions page on your repository.
 2. Make sure the latest "Check the IAM Policy workflow" is successful.
 3. Open the latest workflow.
 4. Download artifact on the latest workflow.
+
+aws cloudformation describe-type --type RESOURCE --type-name AWS::IAM::OIDCProvider --query Schema --output text | jq .handlers
