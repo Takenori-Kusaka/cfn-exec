@@ -32,7 +32,7 @@ result = {
     "Statement": []
 }
 for typename in only_typename_list:
-    cmd = "sh ./src/GetSchema,sh " + typename
+    cmd = "sh ./src/GetSchema.sh " + typename
     print(cmd)
     p = subprocess.run(cmd.split(" "))
     type_actions = p.stdout.decode("utf-8")
