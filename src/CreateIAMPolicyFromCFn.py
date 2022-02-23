@@ -32,14 +32,10 @@ result = {
     "Statement": []
 }
 for typename in only_typename_list:
-    cmd1 = "aws cloudformation describe-type --type RESOURCE --type-name " + typename + " --query Schema --output text"
-    print(cmd1)
-    p1 = subprocess.Popen(cmd1.split(" "), stdout=subprocess.PIPE)
-    cmd2 = "jq .handlers"
-    print(cmd2)
-    p2 = subprocess.Popen(cmd2.split(" "), stdin=p1.stdout)
-    p2.wait()
-    type_actions = p2.stdout.decode("utf-8")
+    cmd = "sh ./src/GetSchema,sh " + typename
+    print(cmd)
+    p = subprocess.run(cmd.split(" "))
+    type_actions = p.stdout.decode("utf-8")
     print(type_actions)
     type_actions_dict = {}
     type_actions_dict = json.loads(type_actions)
