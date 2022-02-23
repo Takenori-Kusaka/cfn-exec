@@ -4,25 +4,16 @@ Cloudformationファイルから必要なIAMポリシーを自動的に抽出す
 
 ![](img/architecture.drawio.svg)
 
-## Dependency
-
-* [cfn_flip](https://github.com/awslabs/aws-cfn-template-flip)
-* [cfnlp](https://github.com/iann0036/aws-leastprivilege)
-
 ## Manual procedure
 
 1. Open Cloudhell on your AWS Account
-2. Install cfn_flip
+2. Install pyyaml
 ```sh
-pip3 install cfn_flip
+pip3 install cpyyaml
 ```
-3. Install cfnlp
+3. Check the IAM Policy required to execute the cloudformation file
 ```sh
-pip3 install cfnlp
-```
-4. Check the IAM Policy required to execute the cloudformation file
-```sh
-cfnlp -i file.yml
+python src/CreateIAMPolicyFromCFn.py $yourcfn $exportfolder
 ```
 
 ## Automatical procedure
@@ -55,5 +46,3 @@ cfnlp -i file.yml
 2. Make sure the latest "Check the IAM Policy workflow" is successful.
 3. Open the latest workflow.
 4. Download artifact on the latest workflow.
-
-aws cloudformation describe-type --type RESOURCE --type-name AWS::IAM::OIDCProvider --query Schema --output text | jq .handlers
