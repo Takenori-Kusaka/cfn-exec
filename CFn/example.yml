@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Running Github Actions workflow with read only access to AWS
+
+Metadata:
+  ParameterGroups:
+    - Label: 
+        default: Github
+      Parameters:
+        - GitHubOrg
+        - RepositoryName
+    - Label: 
+        default: OIDC
+      Parameters:
+        - OIDCProviderArn
+
+Parameters:
+  GitHubOrg:
+    Type: String
+  RepositoryName:
+    Type: String
+  OIDCProviderArn:
+    Description: Arn for the GitHub OIDC Provider. Create OIDC when empty.
+    Default: ""
+    Type: String
+
+Conditions:
+  CreateOIDCProvider: !Equals 
+    - !Ref OIDCProviderArn
+    - ""
+
+Resources:
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !If 
+                - CreateOIDCProvider
+                - !Ref GithubOidc
+                - !Ref OIDCProviderArn
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${RepositoryName}:*
+      Tags:
+        - Key: Name
+          Value: !Sub ${GitHubOrg}-${RepositoryName}-ReadOnlyRole
+
+  GithubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: 
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1 # Update when change to certificate of Github
+      Tags:
+        - Key: Name
+          Value: GithubOIDC-Provider
+
+Outputs:
+  Role:
+    Value: !GetAtt Role.Arn 
+  GithubOidc:
+    Condition: CreateOIDCProvider
+    Value: !GetAtt GithubOidc.Arn 
