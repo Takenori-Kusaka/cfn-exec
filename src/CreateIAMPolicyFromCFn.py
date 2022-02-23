@@ -55,8 +55,8 @@ def create_IAMPolicy(target_type_list: list):
 
 def generate_filepath(basefilepath: str, input_folder: str, output_folder: str):
     idx = basefilepath.find(input_folder)
-    r = basefilepath[idx+len(input_folder):]
-    return os.path.join(output_folder, r.replace('yaml', 'json').replace('yml', 'json'))
+    r = basefilepath[idx+2:]
+    return os.path.join(output_folder, r.replace('.yaml', '.json').replace('.yml', '.json'))
 
 def output_IAMPolicy(filepath: str, iampolicy_dict: dict):
     os.makedirs(os.path.dirname(filepath), exist_ok=True)

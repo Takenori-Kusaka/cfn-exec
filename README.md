@@ -51,3 +51,16 @@ python src/CreateIAMPolicyFromCFn.py $yourcfn $exportfolder
 2. Make sure the latest "Check the IAM Policy workflow" is successful.
 3. Open the latest workflow.
 4. Download artifact on the latest workflow.
+
+## Others
+
+### Github Actions thumbprint
+
+Github Actions thumbprint changes from time to time.  
+e.g. [Changelog](https://github.blog/changelog/2022-01-13-github-actions-update-on-oidc-based-deployments-to-aws/)  
+In that case, Update to [GithubOIDCRole-ReadOnly.yml](./GithubOIDCRole-ReadOnly.yml) after get new thumbprint with [GetGithubOIDCThumbprint.sh](src/GetGithubOIDCThumbprint.sh).
+```sh
+sh GetGithubOIDCThumbprint.sh
+```
+
+
