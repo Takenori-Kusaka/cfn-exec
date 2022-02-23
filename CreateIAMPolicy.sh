@@ -11,21 +11,18 @@ mkdir -p $DIRPATH
 find ./CFn -name "*.json" | while read -r fname
 do
   echo "Find: $fname"
-  echo "Export: $DIRPATH`basename $fname`-IAMPolicy.json"
   python src/CreateIAMPolicyFromCFn.py $fname ./IAMPoliciyFiles
 done
 
 find ./CFn -name "*.yaml" | while read -r fname
 do
   echo "Find: $fname"
-  echo "Export: $DIRPATH`basename $fname`-IAMPolicy.json"
   python src/CreateIAMPolicyFromCFn.py $fname ./IAMPoliciyFiles
 done
 
 find ./CFn -name "*.yml" | while read -r fname
 do
   echo "Find: $fname"
-  echo "Export: $DIRPATH`basename $fname`-IAMPolicy.json"
   python src/CreateIAMPolicyFromCFn.py $fname ./IAMPoliciyFiles
 done
 

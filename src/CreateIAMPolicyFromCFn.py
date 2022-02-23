@@ -43,6 +43,8 @@ for typename in only_typename_list:
     for k, v in type_actions_dict.items():
         if k == 'create':
             actions.extend(v['permissions'])
+        if k == 'update':
+            actions.extend(v['permissions'])
         elif k == 'delete':
             actions.extend(v['permissions'])
 
