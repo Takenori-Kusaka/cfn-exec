@@ -53,7 +53,6 @@ for typename in only_typename_list:
         "Resource": "*"
     }
     result['Statement'].append(statement)
-    break
 
 basename_without_ext = os.path.splitext(os.path.basename(filepath))[0]
 os.makedirs(export_folder, exist_ok=True)
