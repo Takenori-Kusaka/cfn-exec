@@ -10,7 +10,7 @@ pip install cfnlp
 echo "Start to create IAM Policy files"
 echo "Export dir: IAMPoliciyFiles"
 DIRPATH="./IAMPoliciyFiles/"
-
+mkdir -p $DIRPATH
 find . -name "*.json" | while read -r fname
 do
   echo "Find: $fname"
