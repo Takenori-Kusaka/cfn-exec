@@ -32,9 +32,12 @@ result = {
     "Statement": []
 }
 for typename in only_typename_list:
-    typename = "AWS::IAM::OIDCProvider"
-    p1 = subprocess.Popen(["aws", "cloudformation", "describe-type", "--type", "RESOURCE", "--type-name", typename, "--query", "Schema", "--output", "text"], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["jq", ".handlers"], stdin=p1.stdout)
+    cmd1 = "aws cloudformation describe-type --type RESOURCE --type-name " + typename + " --query Schema --output text"
+    print(cmd1)
+    p1 = subprocess.Popen(cmd1.split(" "), stdout=subprocess.PIPE)
+    cmd2 = "jq .handlers"
+    print(cmd2)
+    p2 = subprocess.Popen(cmd2.split(" "), stdin=p1.stdout)
     p2.wait()
     type_actions = p2.stdout.decode("utf-8")
     print(type_actions)

@@ -2,9 +2,9 @@
 
 # Setup
 echo "Setup cfn_flip"
-pip install cfn_flip
+# pip install cfn_flip
 echo "Setup cfn_flip"
-pip install cfnlp
+# pip install cfnlp
 
 # Run
 echo "Start to create IAM Policy files"
