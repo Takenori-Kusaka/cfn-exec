@@ -92,7 +92,7 @@ def create_master_policy(output_folder: str):
         json.dump(result, f, indent=2)
     return result
 
-def convert_cfn_to_iampolicy(filepath: str):
+def convert_cfn_to_iampolicy(args, filepath: str):
     target_type_list = load_cfn(filepath)
     print(target_type_list)
     iampolicy_dict = create_IAMPolicy(target_type_list)
@@ -104,11 +104,11 @@ def convert_cfn_to_iampolicy(filepath: str):
 def with_input_folder(args):
     if os.path.isdir(args.input_path):
         for filepath in glob.glob(os.path.join(args.input_path + "/**/*.*"), recursive=True):
-            convert_cfn_to_iampolicy(filepath)
+            convert_cfn_to_iampolicy(args, filepath)
         master_policy = create_master_policy(args.output_folder)
         print(master_policy)
     else:
-        convert_cfn_to_iampolicy(args.input_path)
+        convert_cfn_to_iampolicy(args, args.input_path)
 
 def with_input_list(args):
     iampolicy_dict = create_IAMPolicy(args.input_list.split(','))
