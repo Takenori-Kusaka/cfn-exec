@@ -25,7 +25,7 @@ def create_IAMPolicy(target_type_list: list):
         try:
             response = client.describe_type(
                 Type='RESOURCE',
-                TypeName='AWS::EC2::VPCGatewayAttachment'
+                TypeName=typename
             )
             schema = json.loads(response['Schema'])
             handler = schema['handlers']
