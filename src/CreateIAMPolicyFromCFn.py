@@ -1,27 +1,17 @@
 import subprocess
 import json
-import yaml
 import os
 import argparse
 import glob
+import re
+import boto3
 
 def load_cfn(filepath: str):
-    cfn_dict = {}
-    root_ext_pair = os.path.splitext(filepath)
-    if 'json' in root_ext_pair[1]:
-        with open(filepath, encoding="utf-8") as f:
-            json_str = f.read()
-            cfn_dict = json.loads(json_str)
-    elif 'yaml' in root_ext_pair[1] or 'yml' in root_ext_pair[1]:
-        with open(filepath, encoding="utf-8") as f:
-            yml_str = f.read()
-            cfn_dict = yaml.full_load(yml_str.replace("!", ""))
-    return cfn_dict
-
-def extract_resouce_type_name_list(cfn_dict: dict):
     typename_list = []
-    for v in cfn_dict['Resources'].values():
-        typename_list.append(v['Type'])
+    with open(filepath, encoding="utf-8") as f:
+        content = f.read()
+        pattern = '\w+::\w+::\w+'
+        typename_list = re.findall(pattern, content)
     only_typename_list = list(set(typename_list))
     return only_typename_list
 
@@ -30,27 +20,33 @@ def create_IAMPolicy(target_type_list: list):
         "Version": "2012-10-17",
         "Statement": []
     }
+    client = boto3.client('cloudformation')
     for typename in target_type_list:
-        cmd = "sh ./src/GetSchema.sh " + typename
-        type_actions = subprocess.run(cmd.split(" "), capture_output=True, text=True).stdout
-        type_actions_dict = {}
-        type_actions_dict = json.loads(type_actions)
-        actions = []
-        for k, v in type_actions_dict.items():
-            if k == 'create':
-                actions.extend(v['permissions'])
-            if k == 'update':
-                actions.extend(v['permissions'])
-            elif k == 'delete':
-                actions.extend(v['permissions'])
+        try:
+            response = client.describe_type(
+                Type='RESOURCE',
+                TypeName='AWS::EC2::VPCGatewayAttachment'
+            )
+            schema = json.loads(response['Schema'])
+            handler = schema['handlers']
+            actions = []
+            for k, v in handler.items():
+                if k == 'create':
+                    actions.extend(v['permissions'])
+                if k == 'update':
+                    actions.extend(v['permissions'])
+                elif k == 'delete':
+                    actions.extend(v['permissions'])
 
-        statement = {
-            "Sid": typename.replace(":", "") + "Access",
-            "Effect": "Allow",
-            "Action": actions,
-            "Resource": "*"
-        }
-        result['Statement'].append(statement)
+            statement = {
+                "Sid": typename.replace(":", "") + "Access",
+                "Effect": "Allow",
+                "Action": actions,
+                "Resource": "*"
+            }
+            result['Statement'].append(statement)
+        except:
+            continue
     return result
 
 def generate_filepath(basefilepath: str, input_folder: str, output_folder: str):
@@ -96,22 +92,23 @@ def create_master_policy(output_folder: str):
         json.dump(result, f, indent=2)
     return result
 
+def convert_cfn_to_iampolicy(filepath: str):
+    target_type_list = load_cfn(filepath)
+    print(target_type_list)
+    iampolicy_dict = create_IAMPolicy(target_type_list)
+    print(iampolicy_dict)
+    output_filepath = generate_filepath(filepath, args.input_path, args.output_folder)
+    print(output_filepath)
+    output_IAMPolicy(output_filepath, iampolicy_dict)
+
 def with_input_folder(args):
-    for filepath in glob.glob(os.path.join(args.input_folder + "/**/*.*"), recursive=True):
-        cfn_dict = load_cfn(filepath)
-        if bool(cfn_dict) == False:
-            continue
-        print(cfn_dict)
-        target_type_list = extract_resouce_type_name_list(cfn_dict)
-        print(target_type_list)
-        iampolicy_dict = create_IAMPolicy(target_type_list)
-        print(iampolicy_dict)
-        output_filepath = generate_filepath(filepath, args.input_folder, args.output_folder)
-        print(output_filepath)
-        output_IAMPolicy(output_filepath, iampolicy_dict)
-    
-    master_policy = create_master_policy(args.output_folder)
-    print(master_policy)
+    if os.path.isdir(args.input_path):
+        for filepath in glob.glob(os.path.join(args.input_path + "/**/*.*"), recursive=True):
+            convert_cfn_to_iampolicy(filepath)
+        master_policy = create_master_policy(args.output_folder)
+        print(master_policy)
+    else:
+        convert_cfn_to_iampolicy(args.input_path)
 
 def with_input_list(args):
     iampolicy_dict = create_IAMPolicy(args.input_list.split(','))
@@ -122,11 +119,11 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "-i", "--input-folderpath",
+        "-i", "--input-path",
         type=str,
         action="store",
-        help="Folder path having Json or Yaml Cloudformation files.",
-        dest="input_folder"
+        help="Cloudformation file or Folder path having Cloudformation files. Supported yaml and json. If this path is a folder, it will be detected recursively.",
+        dest="input_path"
     )
     parser.add_argument(
         "-l", "--input-resource-type-list",
@@ -137,23 +134,27 @@ def main():
     )
     parser.add_argument(
         "-o", "--output-folderpath",
-        required=True,
         type=str,
         action="store",
         dest="output_folder",
-        help="Output IAM policy files root folder",
-        default="./IAMPolicyFiles"
+        help="Output IAM policy files root folder.If not specified, it matches the input-path. Moreover, if input-path is not specified, it will be output to the current directory."
     )
     args = parser.parse_args()
 
-
-    if args.input_folder == None and args.input_list == None:
+    if args.input_path == None and args.input_list == None:
         raise argparse.ArgumentError("Missing input filename and list. Either is required.")
-    elif args.input_folder != None and args.input_list != None:
+    elif args.input_path != None and args.input_list != None:
         raise argparse.ArgumentError("Conflicting input filename and list. Do only one.")
+
+    if args.output_folder == None:
+        if args.input_path != None:
+            basename = os.path.basename(args.input_path)
+            args.output_folder = args.input_path.replace(basename, "")
+        else:
+            args.output_folder = './'
     
     print('Start to create IAM Policy file')
-    if args.input_folder != None:
+    if args.input_path != None:
         with_input_folder(args)
     else:
         with_input_list(args)

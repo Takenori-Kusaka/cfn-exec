@@ -28,7 +28,7 @@ jobs:
           aws-region: ${{env.AWS_REGION}}
       - run: aws sts get-caller-identity
       - name: Install pyyaml
-        run: pip install pyyaml
+        run: pip install boto3[crt]
       - name:  Create IAM Policy files
         run: |
           python ./src/CreateIAMPolicyFromCFn.py -i ./CFn -o ./IAMPolicyFiles
