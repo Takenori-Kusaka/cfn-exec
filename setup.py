@@ -7,11 +7,11 @@ with open("README.md", "r") as fh:
 
 version = sys.version_info[:2]
 if version < (3, 7):
-    print('cfnlp requires Python version 3.7 or later' +
+    print('cfnperm requires Python version 3.7 or later' +
         ' ({}.{} detected).'.format(*version))
     sys.exit(-1)
 
-setup(name='cfn-perm',
+setup(name='cfnperm',
     version='0.0.1',
     description='Generates an IAM policy for the CloudFormation base describe-type\'s schema',
     long_description=long_description,
