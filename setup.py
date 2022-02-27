@@ -11,7 +11,8 @@ if version < (3, 7):
         ' ({}.{} detected).'.format(*version))
     sys.exit(-1)
 
-setup(name='cfnperm',
+setup(
+    name='cfnperm',
     version='0.0.1',
     description='Generates an IAM policy for the CloudFormation base describe-type\'s schema',
     long_description=long_description,
