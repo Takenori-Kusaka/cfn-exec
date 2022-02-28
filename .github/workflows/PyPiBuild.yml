@@ -36,7 +36,7 @@ jobs:
           python -m twine upload --skip-existing --repository testpypi dist/*
       - name: Install cfn-giam from test pypi
         run: |
-          pip install -i https://test.pypi.org/simple/cfngiam
+          pip install -i https://test.pypi.org/simple/ cfn-giam
       - name: Check version cfn-giam from test pypi
         run: |
           cfn-giam -v
