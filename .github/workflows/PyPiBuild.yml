@@ -1,4 +1,4 @@
-name: Check the IAM Policy workflow
+name: PyPi Build
 on:
   push
 env:

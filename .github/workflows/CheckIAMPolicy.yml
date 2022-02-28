@@ -27,11 +27,11 @@ jobs:
           role-session-name: ReadOnlyRole
           aws-region: ${{env.AWS_REGION}}
       - run: aws sts get-caller-identity
-      - name: Install pyyaml
+      - name: Install boto3
         run: pip install boto3[crt]
       - name:  Create IAM Policy files
         run: |
-          python ./src/CreateIAMPolicyFromCFn.py -i ./CFn -o ./IAMPolicyFiles
+          python ./src/main.py -i ./CFn -o ./IAMPolicyFiles
       - name: Archive IAM Policy files
         uses: actions/upload-artifact@v2
         with:
