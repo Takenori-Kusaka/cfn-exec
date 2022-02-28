@@ -1,2 +1,6 @@
 
 IAMPoliciyFiles/
+dist/
+*.egg-info/
+build/
+src/__pycache__/

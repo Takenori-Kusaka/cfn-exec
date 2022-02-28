@@ -5,15 +5,20 @@ import argparse
 import glob
 import re
 import boto3
+import version
 
 def load_cfn(filepath: str):
     typename_list = []
-    with open(filepath, encoding="utf-8") as f:
-        content = f.read()
-        pattern = '\w+::\w+::\w+'
-        typename_list = re.findall(pattern, content)
-    only_typename_list = list(set(typename_list))
-    return only_typename_list
+    try:
+        with open(filepath, encoding="utf-8") as f:
+            content = f.read()
+            pattern = '\w+::\w+::\w+'
+            typename_list = re.findall(pattern, content)
+        only_typename_list = list(set(typename_list))
+        return only_typename_list
+    except:
+        print("Not support file: " + filepath)
+        return []
 
 def create_IAMPolicy(target_type_list: list):
     result = {
@@ -104,6 +109,8 @@ def convert_cfn_to_iampolicy(args, filepath: str):
 def with_input_folder(args):
     if os.path.isdir(args.input_path):
         for filepath in glob.glob(os.path.join(args.input_path + "/**/*.*"), recursive=True):
+            if os.path.isdir(filepath):
+                continue
             convert_cfn_to_iampolicy(args, filepath)
         master_policy = create_master_policy(args.output_folder)
         print(master_policy)
@@ -138,6 +145,12 @@ def main():
         action="store",
         dest="output_folder",
         help="Output IAM policy files root folder.If not specified, it matches the input-path. Moreover, if input-path is not specified, it will be output to the current directory."
+    )
+    parser.add_argument(
+        "-v", "--version",
+        action='version',
+        version=version.__version__,
+        help="view version"
     )
     args = parser.parse_args()
 

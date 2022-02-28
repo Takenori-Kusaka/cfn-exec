@@ -1,1 +1,1 @@
-name = "AWSPolicyCheckerFromCFn"
+name = "cfn-giam"

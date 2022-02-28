@@ -1,24 +1,19 @@
-# AWSPolicyCheckerFromCFn
+# cfn-giam
 
-Automatically extract the required IAM policies from your Cloudformation file
+Automatically generate the required IAM policies from your Cloudformation file
 
 ![](img/architecture.drawio.svg)
 
 ## Manual procedure
 
-1. Open Cloudhell on your AWS Account
-2. Install pyyaml
+1. Open AWS Cloudshell or any terminal configured with aws cli.
+2. Install cfn-giam
 ```sh
-pip3 install cpyyaml
+pip3 install cfngiam
 ```
-3. Clone this repository
+3. Check the IAM Policy required to execute the cloudformation file or folder
 ```sh
-git clone https://github.com/Takenori-Kusaka/AWSPolicyCheckerFromCFn.git
-cd AWSPolicyCheckerFromCFn
-```
-4. Check the IAM Policy required to execute the cloudformation file
-```sh
-python src/CreateIAMPolicyFromCFn.py $yourcfn $exportfolder
+cfn-giam -i $yourcfn -o $exportfolder
 ```
 
 ## Automatical procedure
