@@ -34,9 +34,3 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           python -m twine upload --skip-existing dist/*
-      - name: Install cfn-giam from test pypi
-        run: |
-          pip install cfngiam
-      - name: Check version cfn-giam from test pypi
-        run: |
-          cfn-giam -v
