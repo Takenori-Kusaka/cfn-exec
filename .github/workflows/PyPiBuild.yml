@@ -1,14 +1,12 @@
 name: PyPi Build
 on:
   push
-env:
-  AWS_REGION : ${{secrets.AWS_REGION}}
 
 permissions:
   id-token: write
 
 jobs:
-  CreateIAMPolicy:
+  PyPiBuild:
     runs-on: ubuntu-latest
     steps:
       - name: Git clone the repository
@@ -22,8 +20,6 @@ jobs:
         run: python -V
       - name: Install setupup tools
         run: pip install --user --upgrade setuptools wheel twine 
-      - name: Increment version
-        run: python ./inc_version.py
       - name:  Create tar.gz files and whl files
         run: |
           python ./setup.py sdist bdist_wheel
@@ -37,7 +33,7 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
         run: |
-          python -m twine upload --repository testpypi dist/*
+          python -m twine upload --skip-existing --repository testpypi dist/*
       - name: Install cfn-giam from test pypi
         run: |
           pip install -i https://test.pypi.org/simple/cfngiam
