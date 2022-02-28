@@ -33,6 +33,6 @@ setup (
         'Programming Language :: Python :: 3.7',
     ],
     entry_points={'console_scripts': [
-        'cfn-giam = src.main:main'
+        'cfn-giam = cfn-giam.main:main'
     ]}
 )
