@@ -14,7 +14,7 @@ if version < (3, 7):
     sys.exit(-1)
 
 setup (
-    name='cfngiam',
+    name='cfn-giam',
     version=__version__,
     description='Generates an IAM policy for the CloudFormation base describe-type\'s schema',
     long_description=long_description,
@@ -33,6 +33,6 @@ setup (
         'Programming Language :: Python :: 3.7',
     ],
     entry_points={'console_scripts': [
-        'cfn-giam = cfngiam.main:main'
+        'cfn-giam = cfn-giam.main:main'
     ]}
 )
