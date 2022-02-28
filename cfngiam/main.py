@@ -5,7 +5,7 @@ import argparse
 import glob
 import re
 import boto3
-import version
+from .version import __version__
 
 def load_cfn(filepath: str):
     typename_list = []
@@ -149,7 +149,7 @@ def main():
     parser.add_argument(
         "-v", "--version",
         action='version',
-        version=version.__version__,
+        version=__version__,
         help="view version"
     )
     args = parser.parse_args()
