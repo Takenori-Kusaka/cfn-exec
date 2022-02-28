@@ -2,7 +2,7 @@
 import sys
 from setuptools import setup, find_packages
 
-exec(open("src/version.py").read())
+exec(open("cfngiam/version.py").read())
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -23,7 +23,7 @@ setup (
     author_email='takenori.kusaka@gmail.com',
     url='https://github.com/Takenori-Kusaka/cfn-giam',
     license='MIT',
-    packages=find_packages("src"),
+    packages=find_packages("cfngiam"),
     zip_safe=True,
     keywords='aws',
     install_requires=[

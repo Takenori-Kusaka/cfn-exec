@@ -53,7 +53,7 @@ cfn-giam -i $yourcfn -o $exportfolder
 
 Github Actions thumbprint changes from time to time.  
 e.g. [Changelog](https://github.blog/changelog/2022-01-13-github-actions-update-on-oidc-based-deployments-to-aws/)  
-In that case, Update to [GithubOIDCRole-ReadOnly.yml](./GithubOIDCRole-ReadOnly.yml) after get new thumbprint with [GetGithubOIDCThumbprint.sh](src/GetGithubOIDCThumbprint.sh).
+In that case, Update to [GithubOIDCRole-ReadOnly.yml](./GithubOIDCRole-ReadOnly.yml) after get new thumbprint with [GetGithubOIDCThumbprint.sh](cfngiam/GetGithubOIDCThumbprint.sh).
 ```sh
 sh GetGithubOIDCThumbprint.sh
 ```

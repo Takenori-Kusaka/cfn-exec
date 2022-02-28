@@ -3,4 +3,4 @@ IAMPoliciyFiles/
 dist/
 *.egg-info/
 build/
-src/__pycache__/
+cfngiam/__pycache__/

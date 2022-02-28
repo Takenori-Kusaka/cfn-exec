@@ -2,7 +2,7 @@ import re
 
 pattern = '\d+\.\d+\.\d+'
 result = ''
-with open('./src/version.py', encoding='utf-8') as f:
+with open('./cfngiam/version.py', encoding='utf-8') as f:
     v_str = f.read()
     preversion = re.search(pattern, v_str).group()
     sp_version = preversion.split('.')
@@ -17,5 +17,5 @@ with open('./src/version.py', encoding='utf-8') as f:
         miner = 0
         major = major + 1
     result = v_str.replace(preversion, "{}.{}.{}".format(major, miner, patch))
-with open('./src/version.py', 'w', encoding='utf-8') as f:
+with open('./cfngiam/version.py', 'w', encoding='utf-8') as f:
     f.write(result)

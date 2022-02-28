@@ -31,7 +31,7 @@ jobs:
         run: pip install boto3[crt]
       - name:  Create IAM Policy files
         run: |
-          python ./src/main.py -i ./CFn -o ./IAMPolicyFiles
+          python ./cfngiam/main.py -i ./CFn -o ./IAMPolicyFiles
       - name: Archive IAM Policy files
         uses: actions/upload-artifact@v2
         with:
