@@ -264,8 +264,6 @@ def main():
     else:
         logger.setLevel(logging.WARNING)
 
-    logger.info('Input path: ' + args.input_path)
-    logger.info('Input list: ' + args.input_list)
     logger.info('Output folder: ' + args.output_folder)
 
     if args.input_path == None and args.input_list == None:
@@ -275,6 +273,7 @@ def main():
 
     logger.info('Start to create IAM Policy file')
     if args.input_path != None:
+        logger.info('Input path: ' + args.input_path)
         try:
             with_input_folder(args)
         except Exception as e:
@@ -282,6 +281,7 @@ def main():
             logger.error('Fail to generate: ' + args.input_path)
             return
     else:
+        logger.info('Input list: ' + args.input_list)
         try:
             args.output_folder = './'
             with_input_list(args)
