@@ -7,7 +7,10 @@ import re
 import boto3
 import logging
 from pathlib import Path
-from .version import __version__
+try:
+    from .version import __version__
+except:
+    from version import __version__
 
 logger = logging.getLogger(__name__)
 
