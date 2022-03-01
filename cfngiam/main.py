@@ -1,5 +1,3 @@
-from ctypes import ArgumentError
-from click import FileError
 import requests
 import json
 import os
@@ -31,7 +29,7 @@ def load_cfn(filepath: str):
         return result
     except Exception as e:
         logging.error(e)
-        raise ArgumentError('Fail to access file')
+        raise ValueError('Fail to access file')
 
 def create_IAMPolicy(target_type_list: list):
     result = {
@@ -92,7 +90,7 @@ def output_IAMPolicy(filepath: str, iampolicy_dict: dict):
         with open(filepath, 'w', encoding="utf-8") as f:
             json.dump(iampolicy_dict, f, indent=2)
     except:
-        raise FileError('Fail to output file: ' + filepath)
+        raise ValueError('Fail to output file: ' + filepath)
 
 def create_master_policy(output_folder: str):
     result = {
@@ -133,7 +131,7 @@ def create_master_policy(output_folder: str):
         with open(os.path.join(output_folder, 'MasterPolicy.json'), 'w', encoding="utf-8") as f:
             json.dump(result, f, indent=2)
     except:
-        raise FileError('Fail to output file: ' + os.path.join(output_folder, 'MasterPolicy.json'))
+        raise ValueError('Fail to output file: ' + os.path.join(output_folder, 'MasterPolicy.json'))
     return result
 
 def convert_cfn_to_iampolicy(args, filepath: str):
@@ -149,7 +147,7 @@ def convert_cfn_to_iampolicy_from_web(args):
     try:
         content = requests.get(args.input_path)
     except:
-        raise ArgumentError('Fail to access url: ' + args.input_path)
+        raise ValueError('Fail to access url: ' + args.input_path)
     target_type_list = parse_cfn(content.text)
     logger.info(target_type_list)
     iampolicy_dict = create_IAMPolicy(target_type_list)
@@ -183,7 +181,7 @@ def with_input_list(args):
     try:
         iampolicy_dict = create_IAMPolicy(args.input_list.split(','))
     except:
-        raise ArgumentError('Not supported format: ' + args.input_list)
+        raise ValueError('Not supported format: ' + args.input_list)
     logger.info(iampolicy_dict)
     output_IAMPolicy(os.path.join(args.output_folder, 'IAMPolicy.json'), iampolicy_dict)
 
