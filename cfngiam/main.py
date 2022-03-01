@@ -189,11 +189,11 @@ def with_input_folder(args):
     """cfn-giam input path"""
     pattern = r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
     if re.match(pattern, args.input_path):
-        if args.output_folder != None:
+        if args.output_folder == None:
             args.output_folder = './'
         convert_cfn_to_iampolicy_from_web(args)
     elif os.path.isdir(args.input_path):
-        if args.output_folder != None:
+        if args.output_folder == None:
             args.output_folder = Path(args.input_path).parent
         for filepath in glob.glob(os.path.join(args.input_path + "/**/*.*"), recursive=True):
             if os.path.isdir(filepath):
@@ -202,7 +202,7 @@ def with_input_folder(args):
         master_policy = create_master_policy(args.output_folder)
         logger.info(master_policy)
     else:
-        if args.output_folder != None:
+        if args.output_folder == None:
             args.output_folder = Path(args.input_path).parent
         convert_cfn_to_iampolicy(args, args.input_path)
 
@@ -264,7 +264,8 @@ def main():
     else:
         logger.setLevel(logging.WARNING)
 
-    logger.info('Output folder: ' + args.output_folder)
+    if args.output_folder != None:
+        logger.info('Output folder: ' + args.output_folder)
 
     if args.input_path == None and args.input_list == None:
         logger.error("Missing input filename and list. Either is required.")
