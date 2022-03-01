@@ -29,6 +29,8 @@ jobs:
       - run: aws sts get-caller-identity
       - name: Install boto3
         run: pip install boto3[crt]
+      - name: Install requests
+        run: pip install requests
       - name:  Create IAM Policy files
         working-directory: ./cfngiam
         run: |

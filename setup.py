@@ -27,6 +27,7 @@ setup (
     zip_safe=True,
     keywords='aws',
     install_requires=[
+        'requests>=2.27.1',
         'boto3>=1.18.54'
     ],
     classifiers=[
