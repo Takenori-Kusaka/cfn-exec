@@ -177,6 +177,7 @@ def convert_cfn_to_iampolicy_from_web(args):
     except Exception as e:
         logging.error(e)
         raise ValueError('Fail to access url: ' + args.input_path)
+    logger.info(content.text)
     target_type_list = parse_cfn(content.text)
     logger.info(target_type_list)
     iampolicy_dict = create_IAMPolicy(target_type_list)
