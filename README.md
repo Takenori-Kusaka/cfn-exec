@@ -16,6 +16,44 @@ pip3 install cfngiam
 cfn-giam -i $yourcfn -o $exportfolder
 ```
 
+### cli options
+
+| CLI option                    | Description                                                                                                                                                                | Require   |
+|-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| -i, --input-path              | Cloudformation file, folder or url path having Cloudformation files.   Supported yaml and json. If this path is a folder, it will be detected   recursively.               | yes or -l |
+| -l, --input-resouce-type-list | AWS Resouce type name list of comma-separated strings. e.g.   "AWS::IAM::Role,AWS::VPC::EC2"                                                                               | yes or -i |
+| -o, --output-folderpath       | Output IAM policy files root folder.If not specified, it matches the   input-path. Moreover, if input-path is not specified, it will be output to   the current directory. | no        |
+| -v, --version                 | Show version information and quit.                                                                                                                                         | no        |
+| -V, --verbose                 | give more detailed output                                                                                                                                                  | no        |
+| --help                        | Show a help synopsis and quit.                                                                                                                                             | no        |
+
+### cli examples
+
+#### **Cloudformation file**
+```sh
+cfn-giam -i ./CFn/example.yml
+```
+cfn-giam generates to "./CFn/example.json"
+
+#### **Cloudformation folder**
+```sh
+cfn-giam -i ./CFn -o ./dist
+```
+cfn-giam generates to "./dist/CFn/example.json"
+cfn-giam generates to "./dist/MasterPolicy.json"
+
+#### **Cloudformation url file**
+```sh
+cfn-giam -i https://s3.ap-northeast-1.amazonaws.com/cloudformation-templates-ap-northeast-1/Windows_Single_Server_SharePoint_Foundation.template
+```
+cfn-giam generates to "./Windows_Single_Server_SharePoint_Foundation.json"
+
+#### **Cloudformation resouce type list**
+```sh
+cfn-giam -l AWS::EC2::Instance,AWS::EC2::SecurityGroup,AWS::EC2::Instance
+```
+cfn-giam generates to "./Windows_Single_Server_SharePoint_Foundation.json"
+
 ## Automatical procedure
 
 ### 1. Fork to your Github account from this repository
