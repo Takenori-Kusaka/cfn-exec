@@ -82,11 +82,11 @@ def create_IAMPolicy(target_type_list: list):
                     result['Statement'].extend(statements)
                 except Exception as e:
                     logging.warning(e)
+                    logging.error(traceback.format_exc())
                     logging.warning('Not supported resouce type: ' + typename)
 
         except Exception as e:
             logging.error(e)
-            logging.error(traceback.format_exc())
             logging.warning('Missing schema in ' + typename)
             continue
     return result
