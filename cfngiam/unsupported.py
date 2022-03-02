@@ -1,14 +1,15 @@
 import json
 import logging
 import argparse
+import pkg_resources
 
 logger = logging.getLogger(__name__)
 
 def load_statements(resouce_type: str):
     filename = resouce_type.replace(':', '') + '.json'
-    with open('./cfngiam/unsupported/' + filename, encoding='utf-8') as f:
-        json_policy = json.load(f.read())
-        return json_policy['Statement']
+    json_str = pkg_resources.resource_string('unsupported', filename).decode()
+    json_policy = json.load(json_str)
+    return json_policy['Statement']
 
 def main():
     parser = argparse.ArgumentParser()
