@@ -273,13 +273,15 @@ def main():
     else:
         logger.setLevel(logging.WARNING)
 
-    if args.output_folder != None:
-        logger.info('Output folder: ' + args.output_folder)
-
     if args.input_path == None and args.input_list == None:
         logger.error("Missing input filename and list. Either is required.")
+        return
     elif args.input_path != None and args.input_list != None:
         logger.error("Conflicting input filename and list. Do only one.")
+        return
+
+    if args.output_folder != None:
+        logger.info('Output folder: ' + args.output_folder)
 
     logger.info('Start to create IAM Policy file')
     if args.input_path != None:
