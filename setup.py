@@ -24,6 +24,7 @@ setup (
     url='https://github.com/Takenori-Kusaka/cfn-giam',
     license='MIT',
     packages=["cfngiam"],
+    package_dir="cfngiam",
     zip_safe=True,
     keywords='aws',
     include_package_data=True,
