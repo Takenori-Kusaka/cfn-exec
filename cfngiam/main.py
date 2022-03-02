@@ -8,12 +8,8 @@ import re
 import boto3
 import logging
 from pathlib import Path
-import unsupported
-try:
-    from .version import __version__
-except Exception as e:
-    logging.info(e)
-    from version import __version__
+from cfngiam import unsupported
+from cfngiam import version
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +256,7 @@ def main():
     parser.add_argument(
         "-v", "--version",
         action='version',
-        version=__version__,
+        version=version.__version__,
         help="Show version information and quit."
     )
     parser.add_argument(
