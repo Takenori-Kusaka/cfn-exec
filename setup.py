@@ -23,7 +23,7 @@ setup (
     author_email='takenori.kusaka@gmail.com',
     url='https://github.com/Takenori-Kusaka/cfn-giam',
     license='MIT',
-    packages=find_packages("cfngiam"),
+    packages=find_packages(),
     zip_safe=True,
     keywords='aws',
     include_package_data=True,
