@@ -7,6 +7,7 @@ import glob
 import re
 import boto3
 import logging
+import traceback
 from pathlib import Path
 from cfngiam import unsupported
 from cfngiam import version
@@ -85,6 +86,7 @@ def create_IAMPolicy(target_type_list: list):
 
         except Exception as e:
             logging.error(e)
+            logging.error(traceback.format_exc())
             logging.warning('Missing schema in ' + typename)
             continue
     return result
