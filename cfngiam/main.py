@@ -77,8 +77,10 @@ def create_IAMPolicy(target_type_list: list):
             else:
                 try:
                     statements = unsupported.load_statements(typename)
+                    index = 0
                     for v in statements:
-                        v['Sid'] = typename.replace(":", "") + "Access"
+                        v['Sid'] = typename.replace(":", "") + "Access" + str(index)
+                        index = index + 1
                     result['Statement'].extend(statements)
                 except Exception as e:
                     logging.warning(e)
