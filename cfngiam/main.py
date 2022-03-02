@@ -8,6 +8,7 @@ import re
 import boto3
 import logging
 from pathlib import Path
+import unsupported
 try:
     from .version import __version__
 except Exception as e:
@@ -58,23 +59,34 @@ def create_IAMPolicy(target_type_list: list):
             continue
         try:
             schema = json.loads(response['Schema'])
-            handler = schema['handlers']
-            actions = []
-            for k, v in handler.items():
-                if k == 'create':
-                    actions.extend(v['permissions'])
-                if k == 'update':
-                    actions.extend(v['permissions'])
-                elif k == 'delete':
-                    actions.extend(v['permissions'])
+            if 'handlers' in schema:
+                handler = schema['handlers']
+                actions = []
+                for k, v in handler.items():
+                    if k == 'create':
+                        actions.extend(v['permissions'])
+                    if k == 'update':
+                        actions.extend(v['permissions'])
+                    elif k == 'delete':
+                        actions.extend(v['permissions'])
 
-            statement = {
-                "Sid": typename.replace(":", "") + "Access",
-                "Effect": "Allow",
-                "Action": actions,
-                "Resource": "*"
-            }
-            result['Statement'].append(statement)
+                statement = {
+                    "Sid": typename.replace(":", "") + "Access",
+                    "Effect": "Allow",
+                    "Action": actions,
+                    "Resource": "*"
+                }
+                result['Statement'].append(statement)
+            else:
+                try:
+                    statements = unsupported.load_statements(typename)
+                    for v in statements:
+                        v['Sid'] = typename.replace(":", "") + "Access"
+                    result['Statement'].extend(statements)
+                except Exception as e:
+                    logging.warning(e)
+                    logging.warning('Not supported resouce type: ' + typename)
+
         except Exception as e:
             logging.error(e)
             logging.warning('Missing schema in ' + typename)
