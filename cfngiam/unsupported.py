@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 def load_statements(resouce_type: str):
     filename = resouce_type.replace(':', '') + '.json'
     json_str = pkg_resources.resource_string('cfngiam', 'unsupported/' + filename).decode("utf-8")
-    json_policy = json.load(str(json_str))
+    json_policy = json.loads(str(json_str))
     return json_policy['Statement']
 
 def main():
