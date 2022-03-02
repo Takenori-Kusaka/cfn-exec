@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 def load_statements(resouce_type: str):
     filename = resouce_type.replace(':', '') + '.json'
-    with open('./unsupported/' + filename, encoding='utf-8') as f:
+    with open('./cfngiam/unsupported/' + filename, encoding='utf-8') as f:
         json_policy = json.load(f.read())
         return json_policy['Statement']
 
