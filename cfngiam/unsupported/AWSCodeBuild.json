@@ -1,0 +1,39 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "codebuild:RetryBuildBatch",
+                "codebuild:DeleteBuildBatch",
+                "codebuild:PersistOAuthToken",
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:DeleteSourceCredentials",
+                "codebuild:StopBuildBatch",
+                "codebuild:DeleteOAuthToken",
+                "codebuild:DeleteReportGroup",
+                "codebuild:BatchPutCodeCoverages",
+                "codebuild:StartBuildBatch",
+                "codebuild:UpdateReport",
+                "codebuild:UpdateReportGroup",
+                "codebuild:UpdateProjectVisibility",
+                "codebuild:CreateProject",
+                "codebuild:UpdateProject",
+                "codebuild:RetryBuild",
+                "codebuild:DeleteProject",
+                "codebuild:StartBuild",
+                "codebuild:ImportSourceCredentials",
+                "codebuild:BatchPutTestCases",
+                "codebuild:DeleteWebhook",
+                "codebuild:InvalidateProjectCache",
+                "codebuild:StopBuild",
+                "codebuild:BatchDeleteBuilds",
+                "codebuild:DeleteReport",
+                "codebuild:UpdateWebhook",
+                "codebuild:CreateWebhook"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

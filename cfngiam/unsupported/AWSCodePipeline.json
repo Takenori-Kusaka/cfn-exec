@@ -1,0 +1,36 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "codepipeline:PutJobFailureResult",
+                "codepipeline:StopPipelineExecution",
+                "codepipeline:PutWebhook",
+                "codepipeline:DeleteCustomActionType",
+                "codepipeline:UpdateActionType",
+                "codepipeline:PutActionRevision",
+                "codepipeline:DeregisterWebhookWithThirdParty",
+                "codepipeline:PutJobSuccessResult",
+                "codepipeline:AcknowledgeJob",
+                "codepipeline:DeleteWebhook",
+                "codepipeline:UpdatePipeline",
+                "codepipeline:RetryStageExecution",
+                "codepipeline:PutThirdPartyJobFailureResult",
+                "codepipeline:EnableStageTransition",
+                "codepipeline:CreateCustomActionType",
+                "codepipeline:PollForJobs",
+                "codepipeline:PutThirdPartyJobSuccessResult",
+                "codepipeline:AcknowledgeThirdPartyJob",
+                "codepipeline:CreatePipeline",
+                "codepipeline:DisableStageTransition",
+                "codepipeline:PollForThirdPartyJobs",
+                "codepipeline:RegisterWebhookWithThirdParty",
+                "codepipeline:StartPipelineExecution",
+                "codepipeline:PutApprovalResult",
+                "codepipeline:DeletePipeline"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

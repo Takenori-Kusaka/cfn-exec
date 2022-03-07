@@ -1,0 +1,30 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "codedeploy:DeleteApplication",
+                "codedeploy:CreateApplication",
+                "codedeploy:CreateDeploymentGroup",
+                "codedeploy:UpdateDeploymentGroup",
+                "codedeploy:CreateDeployment",
+                "codedeploy:DeleteGitHubAccountToken",
+                "codedeploy:RegisterApplicationRevision",
+                "codedeploy:DeleteResourcesByExternalId",
+                "codedeploy:DeregisterOnPremisesInstance",
+                "codedeploy:RegisterOnPremisesInstance",
+                "codedeploy:CreateCloudFormationDeployment",
+                "codedeploy:UpdateApplication",
+                "codedeploy:ContinueDeployment",
+                "codedeploy:DeleteDeploymentGroup",
+                "codedeploy:SkipWaitTimeForInstanceTermination",
+                "codedeploy:DeleteDeploymentConfig",
+                "codedeploy:PutLifecycleEventHookExecutionStatus",
+                "codedeploy:StopDeployment",
+                "codedeploy:CreateDeploymentConfig"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
