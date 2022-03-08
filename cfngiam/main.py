@@ -211,39 +211,49 @@ def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict)
     """ create IAM Policy """
     
     createname = policy_name + '_' + str(uuid.uuid4())
-    replace_version = policy_document["Version"] = "2012-10-17"
+    policy_document["Version"] = "2012-10-17"
+    policy_str = json.dumps(policy_document, default=json_serial)
     client = boto3.client('iam')
-    response = client.create_policy(
-        PolicyName=createname,
-        PolicyDocument=json.dumps(replace_version, default=json_serial),
-        Description='Created IAM Policy from {}.'.format(target_name),
-        Tags=[
-            {
-                'Key': 'Name',
-                'Value': createname
-            },
-        ]
-    )
+    try:
+        response = client.create_policy(
+            PolicyName=createname,
+            PolicyDocument=policy_str,
+            Description='Created IAM Policy from {}.'.format(target_name),
+            Tags=[
+                {
+                    'Key': 'Name',
+                    'Value': createname
+                },
+            ]
+        )
+    except Exception as e:
+        logging.error(e)
+        raise ValueError('Fail to create IAM Policy: ' + policy_str)
     logging.info(json.dumps(response))
 
 def create_IAM_Role(role_name: str, target_name: str, policy_document: dict):
     """ create IAM Role """
     
     createname = role_name + '_' + str(uuid.uuid4())
-    replace_version = policy_document["Version"] = "2012-10-17"
+    policy_document["Version"] = "2012-10-17"
+    policy_str = json.dumps(policy_document, default=json_serial)
     client = boto3.client('iam')
-    response = client.create_role(
-        RoleName=createname,
-        AssumeRolePolicyDocument=json.dumps(replace_version, default=json_serial),
-        Description='Created IAM Role from {}.'.format(target_name),
-        MaxSessionDuration=43200,
-        Tags=[
-            {
-                'Key': 'Name',
-                'Value': createname
-            },
-        ]
-    )
+    try:
+        response = client.create_role(
+            RoleName=createname,
+            AssumeRolePolicyDocument=policy_str,
+            Description='Created IAM Role from {}.'.format(target_name),
+            MaxSessionDuration=43200,
+            Tags=[
+                {
+                    'Key': 'Name',
+                    'Value': createname
+                },
+            ]
+        )
+    except Exception as e:
+        logging.error(e)
+        raise ValueError('Fail to create IAM Policy: ' + policy_str)
     logging.info(json.dumps(response))
 
 def with_input_folder(args):
