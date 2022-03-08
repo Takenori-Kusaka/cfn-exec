@@ -207,7 +207,6 @@ def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict)
     client = boto3.client('iam')
     response = client.create_policy(
         PolicyName=createname,
-        Path='cfn-giam',
         PolicyDocument=json.dumps(policy_document),
         Description='Created IAM Policy from {}.'.format(target_name),
         Tags=[
@@ -225,7 +224,6 @@ def create_IAM_Role(role_name: str, target_name: str, policy_document: dict):
     createname = role_name + '_' + str(uuid.uuid4())
     client = boto3.client('iam')
     response = client.create_role(
-        Path='cfn-giam',
         RoleName=createname,
         AssumeRolePolicyDocument=json.dumps(policy_document),
         Description='Created IAM Role from {}.'.format(target_name),
