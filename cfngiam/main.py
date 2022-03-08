@@ -236,6 +236,7 @@ def create_IAM_Role(role_name: str, target_name: str, policy_arn_list: list):
     """ create IAM Role """
     
     createname = role_name + '_' + str(uuid.uuid4())
+    account_id = boto3.client('sts').get_caller_identity()['Account']
     assume_role_policy_document = {
         "Version": "2012-10-17",
         "Statement": [
@@ -248,7 +249,6 @@ def create_IAM_Role(role_name: str, target_name: str, policy_arn_list: list):
             }
         ]
     }
-    account_id = boto3.client('sts').get_caller_identity()['Account']
     client = boto3.client('iam')
     try:
         response = client.create_role(
