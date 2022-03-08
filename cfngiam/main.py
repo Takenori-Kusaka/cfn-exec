@@ -244,7 +244,7 @@ def create_IAM_Role(role_name: str, target_name: str, policy_arn_list: list):
                 "Action": "sts:AssumeRole",
                 "Effect": "Allow",
                 "Principal": {
-                    "AWS": "arn:aws:iam::{}:user/*".format(account_id)
+                    "AWS": str(account_id)
                 }
             }
         ]
