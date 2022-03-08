@@ -11,8 +11,15 @@ from pathlib import Path
 from cfngiam import unsupported
 from cfngiam import version
 import uuid
+from datetime import date, datetime
 
 logger = logging.getLogger(__name__)
+
+def json_serial(obj):
+    """convert json datetime serial"""
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
 
 def parse_cfn(content: str):
     """pick up AWS resouce type"""
@@ -204,10 +211,11 @@ def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict)
     """ create IAM Policy """
     
     createname = policy_name + '_' + str(uuid.uuid4())
+    replace_version = policy_document["Version"] = "2012-10-17"
     client = boto3.client('iam')
     response = client.create_policy(
         PolicyName=createname,
-        PolicyDocument=json.dumps(policy_document),
+        PolicyDocument=json.dumps(replace_version, default=json_serial),
         Description='Created IAM Policy from {}.'.format(target_name),
         Tags=[
             {
@@ -222,10 +230,11 @@ def create_IAM_Role(role_name: str, target_name: str, policy_document: dict):
     """ create IAM Role """
     
     createname = role_name + '_' + str(uuid.uuid4())
+    replace_version = policy_document["Version"] = "2012-10-17"
     client = boto3.client('iam')
     response = client.create_role(
         RoleName=createname,
-        AssumeRolePolicyDocument=json.dumps(policy_document),
+        AssumeRolePolicyDocument=json.dumps(replace_version, default=json_serial),
         Description='Created IAM Role from {}.'.format(target_name),
         MaxSessionDuration=43200,
         Tags=[
