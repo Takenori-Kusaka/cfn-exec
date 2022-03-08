@@ -236,23 +236,24 @@ def create_IAM_Role(role_name: str, target_name: str, policy_arn_list: list):
     """ create IAM Role """
     
     createname = role_name + '_' + str(uuid.uuid4())
+    assume_role_policy_document = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": "sts:AssumeRole",
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": "arn:aws:iam::{}:user/*".format(account_id)
+                }
+            }
+        ]
+    }
     account_id = boto3.client('sts').get_caller_identity()['Account']
     client = boto3.client('iam')
     try:
         response = client.create_role(
             RoleName=createname,
-            AssumeRolePolicyDocument={
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Action": "sts:AssumeRole",
-                        "Effect": "Allow",
-                        "Principal": {
-                            "AWS": "arn:aws:iam::{}:user/*".format(account_id)
-                        }
-                    }
-                ]
-            },
+            AssumeRolePolicyDocument=json.dumps(assume_role_policy_document, default=json_serial),
             Description='Created IAM Role from {}.'.format(target_name),
             MaxSessionDuration=43200,
             Tags=[
