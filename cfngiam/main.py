@@ -7,10 +7,10 @@ import glob
 import re
 import boto3
 import logging
-import traceback
 from pathlib import Path
 from cfngiam import unsupported
 from cfngiam import version
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -164,12 +164,13 @@ def create_master_policy(output_folder: str):
             logging.warning('Not supported file for IAM policy: ' + filepath)
 
     try:
-        with open(os.path.join(output_folder, 'MasterPolicy.json'), 'w', encoding="utf-8") as f:
+        outputpath = os.path.join(output_folder, 'MasterPolicy.json')
+        with open(outputpath, 'w', encoding="utf-8") as f:
             json.dump(result, f, indent=2)
     except Exception as e:
         logging.error(e)
         raise ValueError('Fail to output file: ' + os.path.join(output_folder, 'MasterPolicy.json'))
-    return result
+    return outputpath, result
 
 def convert_cfn_to_iampolicy(args, filepath: str):
     """convert to IAM policy"""
@@ -180,6 +181,7 @@ def convert_cfn_to_iampolicy(args, filepath: str):
     output_filepath = generate_filepath(filepath, args.input_path, args.output_folder)
     logger.info(output_filepath)
     output_IAMPolicy(output_filepath, iampolicy_dict)
+    return output_filepath, iampolicy_dict
 
 def convert_cfn_to_iampolicy_from_web(args):
     """cfn-giam input url"""
@@ -196,14 +198,56 @@ def convert_cfn_to_iampolicy_from_web(args):
     output_filepath = generate_filepath(args.input_path, args.input_path, args.output_folder)
     logger.info(output_filepath)
     output_IAMPolicy(output_filepath, iampolicy_dict)
+    return output_filepath, iampolicy_dict
+
+def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict):
+    """ create IAM Policy """
+    
+    createname = policy_name + '_' + str(uuid.uuid4())
+    client = boto3.client('iam')
+    response = client.create_policy(
+        PolicyName=createname,
+        Path='cfn-giam',
+        PolicyDocument=json.dumps(policy_document),
+        Description='Created IAM Policy from {}.'.format(target_name),
+        Tags=[
+            {
+                'Key': 'Name',
+                'Value': createname
+            },
+        ]
+    )
+    logging.info(json.dumps(response))
+
+def create_IAM_Role(role_name: str, target_name: str, policy_document: dict):
+    """ create IAM Role """
+    
+    createname = role_name + '_' + str(uuid.uuid4())
+    client = boto3.client('iam')
+    response = client.create_role(
+        Path='cfn-giam',
+        RoleName=createname,
+        AssumeRolePolicyDocument=json.dumps(policy_document),
+        Description='Created IAM Role from {}.'.format(target_name),
+        MaxSessionDuration=43200,
+        Tags=[
+            {
+                'Key': 'Name',
+                'Value': createname
+            },
+        ]
+    )
+    logging.info(json.dumps(response))
 
 def with_input_folder(args):
     """cfn-giam input path"""
     pattern = r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
+    output_path = ''
+    policy_document = {}
     if re.match(pattern, args.input_path):
         if args.output_folder == None:
             args.output_folder = './'
-        convert_cfn_to_iampolicy_from_web(args)
+        output_path, policy_document = convert_cfn_to_iampolicy_from_web(args)
     elif os.path.isdir(args.input_path):
         if args.output_folder == None:
             args.output_folder = Path(args.input_path).parent
@@ -211,12 +255,17 @@ def with_input_folder(args):
             if os.path.isdir(filepath):
                 continue
             convert_cfn_to_iampolicy(args, filepath)
-        master_policy = create_master_policy(args.output_folder)
-        logger.info(master_policy)
+        output_path, policy_document = create_master_policy(args.output_folder)
+        logger.info(policy_document)
     else:
         if args.output_folder == None:
             args.output_folder = Path(args.input_path).parent
-        convert_cfn_to_iampolicy(args, args.input_path)
+        output_path, policy_document = convert_cfn_to_iampolicy(args, args.input_path)
+    
+    if args.policy != None:
+        create_IAM_Policy(args.policy, output_path, policy_document)
+    if args.role != None:
+        create_IAM_Role(args.role, output_path, policy_document)
 
 def with_input_list(args):
     """cfn-giam input list"""
@@ -226,7 +275,13 @@ def with_input_list(args):
         logging.error(e)
         raise ValueError('Not supported format: ' + args.input_list)
     logger.info(iampolicy_dict)
-    output_IAMPolicy(os.path.join(args.output_folder, 'IAMPolicy.json'), iampolicy_dict)
+    output_path = os.path.join(args.output_folder, 'IAMPolicy.json')
+    output_IAMPolicy(output_path, iampolicy_dict)
+    
+    if args.policy != None:
+        create_IAM_Policy(args.policy, output_path, iampolicy_dict)
+    if args.role != None:
+        create_IAM_Role(args.role, output_path, iampolicy_dict)
 
 def main():
     """cfn-giam main"""
@@ -255,6 +310,20 @@ def main():
         dest="output_folder",
         help="Output IAM policy files root folder.If not specified, it matches the input-path. \
             Moreover, if input-path is not specified, it will be output to the current directory."
+    )
+    parser.add_argument(
+        "-p", "--policy",
+        type=str,
+        action="store",
+        dest="policy",
+        help="Set the name of the IAM Policy to be created on AWS."
+    )
+    parser.add_argument(
+        "-r", "--role",
+        type=str,
+        action="store",
+        dest="role",
+        help="Set the name of the IAM Role to be created on AWS."
     )
     parser.add_argument(
         "-v", "--version",
