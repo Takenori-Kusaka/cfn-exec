@@ -229,7 +229,7 @@ def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict)
     except Exception as e:
         logging.error(e)
         raise ValueError('Fail to create IAM Policy: ' + policy_str)
-    logging.info(json.dumps(response))
+    logging.info(json.dumps(response, default=json_serial))
 
 def create_IAM_Role(role_name: str, target_name: str, policy_document: dict):
     """ create IAM Role """
@@ -254,7 +254,7 @@ def create_IAM_Role(role_name: str, target_name: str, policy_document: dict):
     except Exception as e:
         logging.error(e)
         raise ValueError('Fail to create IAM Policy: ' + policy_str)
-    logging.info(json.dumps(response))
+    logging.info(json.dumps(response, default=json_serial))
 
 def with_input_folder(args):
     """cfn-giam input path"""
