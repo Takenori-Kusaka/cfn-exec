@@ -230,18 +230,29 @@ def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict)
         logging.error(e)
         raise ValueError('Fail to create IAM Policy: ' + policy_str)
     logging.info(json.dumps(response, default=json_serial))
+    return [response['Policy']['Arn']]
 
-def create_IAM_Role(role_name: str, target_name: str, policy_document: dict):
+def create_IAM_Role(role_name: str, target_name: str, policy_arn_list: list):
     """ create IAM Role """
     
     createname = role_name + '_' + str(uuid.uuid4())
-    policy_document["Version"] = "2012-10-17"
-    policy_str = json.dumps(policy_document, default=json_serial)
+    account_id = boto3.client('sts').get_caller_identity()['Account']
     client = boto3.client('iam')
     try:
         response = client.create_role(
             RoleName=createname,
-            AssumeRolePolicyDocument=policy_str,
+            AssumeRolePolicyDocument={
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": "sts:AssumeRole",
+                        "Effect": "Allow",
+                        "Principal": {
+                            "AWS": "arn:aws:iam::{}:user/username".format(account_id)
+                        }
+                    }
+                ]
+            },
             Description='Created IAM Role from {}.'.format(target_name),
             MaxSessionDuration=43200,
             Tags=[
@@ -251,9 +262,11 @@ def create_IAM_Role(role_name: str, target_name: str, policy_document: dict):
                 },
             ]
         )
+        for policy_arn in policy_arn_list:
+            client.attach_role_policy(RoleName=createname, PolicyArn=policy_arn)
     except Exception as e:
         logging.error(e)
-        raise ValueError('Fail to create IAM Policy: ' + policy_str)
+        raise ValueError('Fail to create IAM Role: ' + createname)
     logging.info(json.dumps(response, default=json_serial))
 
 def with_input_folder(args):
@@ -279,10 +292,10 @@ def with_input_folder(args):
             args.output_folder = Path(args.input_path).parent
         output_path, policy_document = convert_cfn_to_iampolicy(args, args.input_path)
     
-    if args.policy != None:
-        create_IAM_Policy(args.policy, output_path, policy_document)
-    if args.role != None:
-        create_IAM_Role(args.role, output_path, policy_document)
+    if args.policy != None or args.role != None:
+        policy_arn_list = create_IAM_Policy(args.policy, output_path, policy_document)
+        if args.role != None:
+            create_IAM_Role(args.role, output_path, policy_arn_list)
 
 def with_input_list(args):
     """cfn-giam input list"""
