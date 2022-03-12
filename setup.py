@@ -30,7 +30,7 @@ setup (
     install_requires=[
         'requests>=2.27.1',
         'boto3>=1.18.54',
-        'numpy>=1.22.3'
+        'numpy>=1.21.0'
     ],
     classifiers=[
         'Programming Language :: Python :: 3.7',
