@@ -241,41 +241,50 @@ def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict)
     
     createname = policy_name + '_' + str(uuid.uuid4())
     policy_document["Version"] = "2012-10-17"
-        iampolicy_size = len(json.dumps(result, indent=2))
+    policy_str = json.dumps(policy_document, default=json_serial)
+    iampolicy_size = len(policy_str)
+    client = boto3.client('iam')
+    result = []
+    try:
         if iampolicy_size > 4000:
-            statements = np.array_split(result['Statement'], int(iampolicy_size / 3000))
+            statements = np.array_split(policy_document['Statement'], int(iampolicy_size / 3000))
             index = 0
             for s in statements:
                 d = {
                     "Version": "2012-10-17",
                     "Statement": s
                 }
-                filepath_index = outputpath.replace('.json', '{}.json'.format(index))
-                with open(filepath_index, 'w', encoding="utf-8") as f:
-                    json.dump(d, f, indent=2)
+                response = client.create_policy(
+                    PolicyName=createname,
+                    PolicyDocument=json.dumps(d, default=json_serial),
+                    Description='Created IAM Policy from {}_{}.'.format(target_name, index),
+                    Tags=[
+                        {
+                            'Key': 'Name',
+                            'Value': createname + '_' + str(index)
+                        },
+                    ]
+                )
+                result.append(response['Policy']['Arn'])
                 index = index + 1
         else:
-            with open(outputpath, 'w', encoding="utf-8") as f:
-                json.dump(result, f, indent=2)
-    policy_str = json.dumps(policy_document, default=json_serial)
-    client = boto3.client('iam')
-    try:
-        response = client.create_policy(
-            PolicyName=createname,
-            PolicyDocument=policy_str,
-            Description='Created IAM Policy from {}.'.format(target_name),
-            Tags=[
-                {
-                    'Key': 'Name',
-                    'Value': createname
-                },
-            ]
-        )
+            response = client.create_policy(
+                PolicyName=createname,
+                PolicyDocument=policy_str,
+                Description='Created IAM Policy from {}.'.format(target_name),
+                Tags=[
+                    {
+                        'Key': 'Name',
+                        'Value': createname
+                    },
+                ]
+            )
+            result.append(response['Policy']['Arn'])
     except Exception as e:
         logging.error(e)
         raise ValueError('Fail to create IAM Policy: ' + policy_str)
     logging.info(json.dumps(response, default=json_serial))
-    return [response['Policy']['Arn']]
+    return result
 
 def create_IAM_Role(role_name: str, target_name: str, policy_arn_list: list):
     """ create IAM Role """
@@ -416,10 +425,10 @@ def main():
     args = parser.parse_args()
 
     if args.detail:
-        logger.setLevel(logging.INFO)
+        logging.basicConfig(level=logging.INFO, format='%(message)s')
         logger.info('Set detail log level.')
     else:
-        logger.setLevel(logging.WARNING)
+        logging.basicConfig(level=logging.WARNING, format='%(message)s')
 
     if args.input_path == None and args.input_list == None:
         logger.error("Missing input filename and list. Either is required.")
