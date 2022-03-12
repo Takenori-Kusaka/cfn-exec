@@ -12,6 +12,7 @@ from cfngiam import unsupported
 from cfngiam import version
 import uuid
 from datetime import date, datetime
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -126,8 +127,22 @@ def output_IAMPolicy(filepath: str, iampolicy_dict: dict):
     """output to IAM policy"""
     try:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        with open(filepath, 'w', encoding="utf-8") as f:
-            json.dump(iampolicy_dict, f, indent=2)
+        iampolicy_size = len(json.dumps(iampolicy_dict, indent=2, default=json_serial))
+        if iampolicy_size > 4000:
+            statements = np.array_split(iampolicy_dict['Statement'], int(iampolicy_size / 3000))
+            index = 0
+            for s in statements:
+                d = {
+                    "Version": "2012-10-17",
+                    "Statement": s
+                }
+                filepath_index = filepath.replace('.json', '{}.json'.format(index))
+                with open(filepath_index, 'w', encoding="utf-8") as f:
+                    json.dump(d, f, indent=2, default=json_serial)
+                index = index + 1
+        else:
+            with open(filepath, 'w', encoding="utf-8") as f:
+                json.dump(iampolicy_dict, f, indent=2, default=json_serial)
     except Exception as e:
         logging.error(e)
         raise ValueError('Fail to output file: ' + filepath)
@@ -172,8 +187,22 @@ def create_master_policy(output_folder: str):
 
     try:
         outputpath = os.path.join(output_folder, 'MasterPolicy.json')
-        with open(outputpath, 'w', encoding="utf-8") as f:
-            json.dump(result, f, indent=2)
+        iampolicy_size = len(json.dumps(result, indent=2, default=json_serial))
+        if iampolicy_size > 4000:
+            statements = np.array_split(result['Statement'], int(iampolicy_size / 3000))
+            index = 0
+            for s in statements:
+                d = {
+                    "Version": "2012-10-17",
+                    "Statement": s
+                }
+                filepath_index = outputpath.replace('.json', '{}.json'.format(index))
+                with open(filepath_index, 'w', encoding="utf-8") as f:
+                    json.dump(d, f, indent=2, default=json_serial)
+                index = index + 1
+        else:
+            with open(outputpath, 'w', encoding="utf-8") as f:
+                json.dump(result, f, indent=2, default=json_serial)
     except Exception as e:
         logging.error(e)
         raise ValueError('Fail to output file: ' + os.path.join(output_folder, 'MasterPolicy.json'))
@@ -212,6 +241,22 @@ def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict)
     
     createname = policy_name + '_' + str(uuid.uuid4())
     policy_document["Version"] = "2012-10-17"
+        iampolicy_size = len(json.dumps(result, indent=2))
+        if iampolicy_size > 4000:
+            statements = np.array_split(result['Statement'], int(iampolicy_size / 3000))
+            index = 0
+            for s in statements:
+                d = {
+                    "Version": "2012-10-17",
+                    "Statement": s
+                }
+                filepath_index = outputpath.replace('.json', '{}.json'.format(index))
+                with open(filepath_index, 'w', encoding="utf-8") as f:
+                    json.dump(d, f, indent=2)
+                index = index + 1
+        else:
+            with open(outputpath, 'w', encoding="utf-8") as f:
+                json.dump(result, f, indent=2)
     policy_str = json.dumps(policy_document, default=json_serial)
     client = boto3.client('iam')
     try:

@@ -29,7 +29,8 @@ setup (
     include_package_data=True,
     install_requires=[
         'requests>=2.27.1',
-        'boto3>=1.18.54'
+        'boto3>=1.18.54',
+        'numpy>=1.22.3'
     ],
     classifiers=[
         'Programming Language :: Python :: 3.7',
