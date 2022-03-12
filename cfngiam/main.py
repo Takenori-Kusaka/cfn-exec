@@ -134,7 +134,7 @@ def output_IAMPolicy(filepath: str, iampolicy_dict: dict):
             for s in statements:
                 d = {
                     "Version": "2012-10-17",
-                    "Statement": s
+                    "Statement": s.tolist()
                 }
                 filepath_index = filepath.replace('.json', '{}.json'.format(index))
                 with open(filepath_index, 'w', encoding="utf-8") as f:
@@ -194,7 +194,7 @@ def create_master_policy(output_folder: str):
             for s in statements:
                 d = {
                     "Version": "2012-10-17",
-                    "Statement": s
+                    "Statement": s.tolist()
                 }
                 filepath_index = outputpath.replace('.json', '{}.json'.format(index))
                 with open(filepath_index, 'w', encoding="utf-8") as f:
@@ -252,7 +252,7 @@ def create_IAM_Policy(policy_name: str, target_name: str, policy_document: dict)
             for s in statements:
                 d = {
                     "Version": "2012-10-17",
-                    "Statement": s
+                    "Statement": s.tolist()
                 }
                 response = client.create_policy(
                     PolicyName=createname,
