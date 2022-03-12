@@ -27,6 +27,7 @@ def parse_cfn(content: str):
     try:
         pattern = r'\w+::\w+::\w+'
         typename_list = re.findall(pattern, content)
+        typename_list.remove('AWS::CloudFormation::Interface')
     except Exception as e:
         logging.error(e)
         raise ValueError('Missing AWS Resouce type')
