@@ -1,4 +1,4 @@
-# cfn-giam
+# cfn-exec
 
 Automatically generate the required IAM policies from your Cloudformation file
 
@@ -7,13 +7,13 @@ Automatically generate the required IAM policies from your Cloudformation file
 ## Manual procedure
 
 1. Open AWS Cloudshell or any terminal configured with aws cli.
-2. Install cfn-giam
+2. Install cfn-exec
 ```sh
-pip3 install cfngiam
+pip3 install cfnexec
 ```
 3. Check the IAM Policy required to execute the cloudformation file or folder
 ```sh
-cfn-giam -i $yourcfn -o $exportfolder
+cfn-exec -i $yourcfn -o $exportfolder
 ```
 
 ### cli options
@@ -33,28 +33,28 @@ cfn-giam -i $yourcfn -o $exportfolder
 
 #### **Cloudformation file**
 ```sh
-cfn-giam -i ./CFn/example.yml
+cfn-exec -i ./CFn/example.yml
 ```
-cfn-giam generates to "./CFn/example.json"
+cfn-exec generates to "./CFn/example.json"
 
 #### **Cloudformation folder**
 ```sh
-cfn-giam -i ./CFn -o ./dist
+cfn-exec -i ./CFn -o ./dist
 ```
-cfn-giam generates to "./dist/CFn/example.json"
-cfn-giam generates to "./dist/MasterPolicy.json"
+cfn-exec generates to "./dist/CFn/example.json"
+cfn-exec generates to "./dist/MasterPolicy.json"
 
 #### **Cloudformation url file**
 ```sh
-cfn-giam -i https://s3.ap-northeast-1.amazonaws.com/cloudformation-templates-ap-northeast-1/Windows_Single_Server_SharePoint_Foundation.template
+cfn-exec -i https://s3.ap-northeast-1.amazonaws.com/cloudformation-templates-ap-northeast-1/Windows_Single_Server_SharePoint_Foundation.template
 ```
-cfn-giam generates to "./Windows_Single_Server_SharePoint_Foundation.json"
+cfn-exec generates to "./Windows_Single_Server_SharePoint_Foundation.json"
 
 #### **Cloudformation resouce type list**
 ```sh
-cfn-giam -l AWS::EC2::Instance,AWS::EC2::SecurityGroup,AWS::EC2::Instance
+cfn-exec -l AWS::EC2::Instance,AWS::EC2::SecurityGroup,AWS::EC2::Instance
 ```
-cfn-giam generates to "./Windows_Single_Server_SharePoint_Foundation.json"
+cfn-exec generates to "./Windows_Single_Server_SharePoint_Foundation.json"
 
 ## Automatical procedure
 
@@ -93,7 +93,7 @@ cfn-giam generates to "./Windows_Single_Server_SharePoint_Foundation.json"
 
 Github Actions thumbprint changes from time to time.  
 e.g. [Changelog](https://github.blog/changelog/2022-01-13-github-actions-update-on-oidc-based-deployments-to-aws/)  
-In that case, Update to [GithubOIDCRole-ReadOnly.yml](./GithubOIDCRole-ReadOnly.yml) after get new thumbprint with [GetGithubOIDCThumbprint.sh](cfngiam/GetGithubOIDCThumbprint.sh).
+In that case, Update to [GithubOIDCRole-ReadOnly.yml](./GithubOIDCRole-ReadOnly.yml) after get new thumbprint with [GetGithubOIDCThumbprint.sh](cfnexec/GetGithubOIDCThumbprint.sh).
 ```sh
 sh GetGithubOIDCThumbprint.sh
 ```

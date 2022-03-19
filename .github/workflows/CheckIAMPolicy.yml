@@ -32,7 +32,7 @@ jobs:
       - name: Install requests
         run: pip install requests
       - name:  Create IAM Policy files
-        working-directory: ./cfngiam
+        working-directory: ./cfnexec
         run: |
           python ./main.py -i ../CFn -o ../IAMPolicyFiles
       - name: Archive IAM Policy files

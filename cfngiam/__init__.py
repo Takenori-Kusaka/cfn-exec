@@ -1,1 +1,1 @@
-name = "cfn-giam"
+name = "cfn-exec"

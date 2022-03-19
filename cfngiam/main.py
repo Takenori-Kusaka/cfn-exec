@@ -1,4 +1,4 @@
-"""This is a cfn-giam main program."""
+"""This is a cfn-exec main program."""
 import requests
 import json
 import os
@@ -8,8 +8,8 @@ import re
 import boto3
 import logging
 from pathlib import Path
-from cfngiam import unsupported
-from cfngiam import version
+from cfnexec import unsupported
+from cfnexec import version
 import uuid
 from datetime import date, datetime
 import numpy as np
@@ -221,7 +221,7 @@ def convert_cfn_to_iampolicy(args, filepath: str):
     return output_filepath, iampolicy_dict
 
 def convert_cfn_to_iampolicy_from_web(args):
-    """cfn-giam input url"""
+    """cfn-exec input url"""
     try:
         content = requests.get(args.input_path)
     except Exception as e:
@@ -326,7 +326,7 @@ def create_IAM_Role(role_name: str, target_name: str, policy_arn_list: list):
     logging.info(json.dumps(response, default=json_serial))
 
 def with_input_folder(args):
-    """cfn-giam input path"""
+    """cfn-exec input path"""
     pattern = r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
     output_path = ''
     policy_document = {}
@@ -354,7 +354,7 @@ def with_input_folder(args):
             create_IAM_Role(args.role, output_path, policy_arn_list)
 
 def with_input_list(args):
-    """cfn-giam input list"""
+    """cfn-exec input list"""
     try:
         iampolicy_dict = create_IAMPolicy(args.input_list.split(','))
     except Exception as e:
@@ -370,7 +370,7 @@ def with_input_list(args):
         create_IAM_Role(args.role, output_path, iampolicy_dict)
 
 def main():
-    """cfn-giam main"""
+    """cfn-exec main"""
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
