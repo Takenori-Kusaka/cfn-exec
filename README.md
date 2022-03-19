@@ -1,19 +1,17 @@
 # cfn-exec
 
-Automatically generate the required IAM policies from your Cloudformation file
+This is Wrapper tool for aws cloudformation create stack.
 
-![](img/architecture.drawio.svg)
-
-## Manual procedure
+## Installation
 
 1. Open AWS Cloudshell or any terminal configured with aws cli.
 2. Install cfn-exec
 ```sh
 pip3 install cfnexec
 ```
-3. Check the IAM Policy required to execute the cloudformation file or folder
+3. Create stack with CFn file or url and parameter file or url
 ```sh
-cfn-exec -i $yourcfn -o $exportfolder
+cfn-exec -n $your_stack_name -i $your_cfn_url -p $your_cfn_parameter_url 
 ```
 
 ### cli options

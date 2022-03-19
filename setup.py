@@ -16,7 +16,7 @@ if version < (3, 7):
 setup (
     name='cfnexec',
     version=__version__,
-    description='Generates an IAM policy for the CloudFormation base describe-type\'s schema',
+    description='This is Wrapper tool for aws cloudformation create stack.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     author='Takenori Kusaka',
@@ -28,7 +28,8 @@ setup (
     keywords='aws',
     include_package_data=True,
     install_requires=[
-        'boto3>=1.18.54'
+        'boto3>=1.18.54',
+        'pyyaml>=6.0'
     ],
     classifiers=[
         'Programming Language :: Python :: 3.7',
