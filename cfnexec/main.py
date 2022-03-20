@@ -26,8 +26,20 @@ def isUrl(path: str):
     else:
         return False
 
+def read_s3_file(url: str):
+    s3 = boto3.resource('s3')
+    url_sp = url.split('/')
+    domain_sp = url_sp[2].split('.')
+    bucket = s3.Bucket(domain_sp[0])
+    obj  = bucket.Object('/'.join(url_sp[3:]))
+    response = obj.get()    
+    body = response['Body'].read()
+
+    return body.decode('utf-8')
+
 def create_s3():
     bucket_name = 'cfn-exec-' + boto3.session.Session().region_name + '-' + str(uuid.uuid4())
+    logger.debug('Create s3 bucket: ' + bucket_name)
     s3 = boto3.resource('s3', region_name=boto3.session.Session().region_name)
     bucket = s3.Bucket(bucket_name)
     bucket.create(CreateBucketConfiguration={'LocationConstraint': boto3.session.Session().region_name})
@@ -37,6 +49,7 @@ def upload_file_to_s3(bucket_name: str, filepath_list: list, root_path: str):
     s3 = boto3.resource('s3', region_name=boto3.session.Session().region_name)
     root_path_str = str(Path(root_path).resolve())
     for f in filepath_list:
+        logger.debug('Upload s3 bucket: ' + f)
         f_str = str(Path(f).resolve())
         s3.Object(bucket_name, f_str.replace(root_path_str, '')[1:]).upload_file(f)
 
@@ -47,7 +60,38 @@ def get_public_url(bucket, target_object_path):
         bucket_location['LocationConstraint'],
         bucket,
         target_object_path)
-        
+
+def delete_bucket(bucket_name, dryrun=False):
+    contents_count = 0
+    next_token = ''
+    client = boto3.client('s3')
+
+    while True:
+        if next_token == '':
+            response = client.list_objects_v2(Bucket=bucket_name)
+        else:
+            response = client.list_objects_v2(Bucket=bucket_name, ContinuationToken=next_token)
+
+        if 'Contents' in response:
+            contents = response['Contents']
+            contents_count = contents_count + len(contents)
+            for content in contents:
+                if not dryrun:
+                    logger.debug("Deleting: s3://" + bucket_name + "/" + content['Key'])
+                    client.delete_object(Bucket=bucket_name, Key=content['Key'])
+                else:
+                    logger.debug("DryRun: s3://" + bucket_name + "/" + content['Key'])
+
+        if 'NextContinuationToken' in response:
+            next_token = response['NextContinuationToken']
+        else:
+            break
+    
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)
+    bucket.delete()
+
+
 def find_cfn_files(base_folder_path: str):
     filepath_list = []
     filepath_list.extend(list(glob.glob(os.path.join(base_folder_path + "/**/*.json"), recursive=True)))
@@ -61,13 +105,18 @@ def upload_cfn(input_path: str):
     bucket_name = create_s3()
     filepath_list = find_cfn_files(str(Path(input_path).parent))
     upload_file_to_s3(bucket_name, filepath_list, str(Path(input_path).parent))
-    return get_public_url(bucket_name, Path(input_path).name)
+    return get_public_url(bucket_name, Path(input_path).name), bucket_name
+
 
 def load_parameter_file(param_path: str):
     root, ext = os.path.splitext(param_path)
     content = ''
     if isUrl(param_path):
-        content = requests.get(param_path)
+        if 's3.' in param_path and '.amazonaws.com' in param_path:
+            content = read_s3_file(param_path)
+        else:
+            res = requests.get(param_path)
+            content = res.text
     else:
         with open(param_path, encoding='utf-8') as f:
             content = f.read()
@@ -103,8 +152,9 @@ def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str):
 
 def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollback: bool, role_arn: str):
     client = boto3.client('cloudformation')
-    print(cfn_url)
-    print(param_list)
+    logger.info('StackName: ' + stack_name)
+    logger.info('CFn URL: ' + cfn_url)
+    logger.info('Parameters: ' + json.dumps(param_list))
     response = client.create_stack(
         StackName=stack_name,
         TemplateURL=cfn_url,
@@ -113,6 +163,7 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
         # RoleARN=role_arn if role_arn != None else ''
     )
     return response
+
 
 def main():
     """cfn-exec main"""
@@ -182,15 +233,22 @@ def main():
         logger.info('Set detail log level.')
     else:
         logging.basicConfig(level=logging.INFO, format='%(message)s')
-
+        
     logger.info('Start to create stack')
 
     if isUrl(args.input_path):
         cfn_url = args.input_path
     else:
-        cfn_url = upload_cfn(args.input_path)
-    param = generate_parameter(args.param, args.s3_bucket_url_parameter_key_name)
-    stack = create_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.role_arn)
+        cfn_url, bucket_name = upload_cfn(args.input_path)
+    try:
+        param = generate_parameter(args.param, args.s3_bucket_url_parameter_key_name)
+        stack = create_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.role_arn)
+    except Exception as e:
+        logger.error(e)
+    if isUrl(args.input_path):
+        pass
+    else:
+        delete_bucket(bucket_name)
 
     logger.info('Successfully to create stack: ' + stack['StackId'])
 
