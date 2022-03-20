@@ -3,16 +3,11 @@ import requests
 import json
 import os
 import argparse
-import glob
 import re
 import boto3
 import logging
 from pathlib import Path
-import uuid
-from datetime import date, datetime
-import numpy as np
 from cfngiam import version
-import uuid
 import yaml
 
 logger = logging.getLogger(__name__)

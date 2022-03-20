@@ -4,4 +4,3 @@ dist/
 *.egg-info/
 build/
 cfnexec/__pycache__/
-input/
