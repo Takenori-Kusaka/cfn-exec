@@ -77,12 +77,15 @@ def load_parameter_file(param_path: str):
         result = yaml.safe_load(content)
     return result
 
-def generate_parameter(param_path: str):
+def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str):
     param = load_parameter_file(param_path)
 
+    result = []
     if isinstance(param, list):
         if len(list(filter(lambda p: 'ParameterKey' in p and 'ParameterValue' in p, param))) == len(param):
-            return param
+            result = param
+        else:
+            raise('Not support parameter file')
     elif isinstance(param, dict):
         result = []
         for k, v in param.items():
@@ -92,9 +95,11 @@ def generate_parameter(param_path: str):
                 'ParameterKey': k,
                 'ParameterValue': v
             })
-        return result
     else:
         raise('Not support parameter file')
+    for r in list(filter(lambda p: p['ParameterKey'] == s3_bucket_url_parameter_key_name, result)):
+        r['ParameterValue'] = s3_bucket_url_parameter_key_name
+    return result
 
 def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollback: bool, role_arn: str):
     client = boto3.client('cloudformation')
@@ -184,7 +189,7 @@ def main():
         cfn_url = args.input_path
     else:
         cfn_url = upload_cfn(args.input_path)
-    param = generate_parameter(args.param)
+    param = generate_parameter(args.param, args.s3_bucket_url_parameter_key_name)
     stack = create_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.role_arn)
 
     logger.info('Successfully to create stack: ' + stack['StackId'])
