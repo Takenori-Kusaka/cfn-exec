@@ -10,7 +10,7 @@ from pathlib import Path
 import uuid
 import glob
 try:
-    from cfngiam import version
+    from cfnexec import version
 except:
     import version
 import yaml
@@ -146,8 +146,9 @@ def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str):
             })
     else:
         raise('Not support parameter file')
-    for r in list(filter(lambda p: p['ParameterKey'] == s3_bucket_url_parameter_key_name, result)):
-        r['ParameterValue'] = s3_bucket_url_parameter_key_name
+    if s3_bucket_url_parameter_key_name != None:
+        for r in list(filter(lambda p: p['ParameterKey'] == s3_bucket_url_parameter_key_name, result)):
+            r['ParameterValue'] = s3_bucket_url_parameter_key_name
     return result
 
 def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollback: bool, role_arn: str):
@@ -211,7 +212,6 @@ def main():
         type=str,
         action="store",
         dest="s3_bucket_url_parameter_key_name",
-        default="TemplateS3BucketURL",
         help="Set the parameter key name to this, if the input path is a local file and you want to reflect the S3 bucket name to be uploaded in the parameter."
     )
     parser.add_argument(
