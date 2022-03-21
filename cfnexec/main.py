@@ -156,6 +156,9 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
     logger.info('StackName: ' + stack_name)
     logger.info('CFn URL: ' + cfn_url)
     logger.info('Parameters: ' + json.dumps(param_list))
+    response = client.validate_template(
+        TemplateURL=cfn_url
+    )
     response = client.create_stack(
         StackName=stack_name,
         TemplateURL=cfn_url,
