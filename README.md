@@ -146,4 +146,3 @@ cfn-exec -n example-stack -i https://yourbucket.s3.us-east-1.amazonaws.com/main.
 ```sh
 cfn-exec -n example-stack -i https://raw.githubusercontent.com/youraccount/yourrepo/main/input/main.yml -p https://raw.githubusercontent.com/youraccount/yourrepo/main/param.yml
 ```
-
