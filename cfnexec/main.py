@@ -126,7 +126,7 @@ def load_parameter_file(param_path: str):
         result = yaml.safe_load(content)
     return result
 
-def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str):
+def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str, bucket_name: str):
     param = load_parameter_file(param_path)
 
     result = []
@@ -148,7 +148,7 @@ def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str):
         raise('Not support parameter file')
     if s3_bucket_url_parameter_key_name != None:
         for r in list(filter(lambda p: p['ParameterKey'] == s3_bucket_url_parameter_key_name, result)):
-            r['ParameterValue'] = s3_bucket_url_parameter_key_name
+            r['ParameterValue'] = 'http://{}.s3.amazonaws.com'.format(bucket_name)
     return result
 
 def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollback: bool, role_arn: str):
@@ -239,12 +239,13 @@ def main():
         
     logger.info('Start to create stack')
 
+    bucket_name = ''
     if isUrl(args.input_path):
         cfn_url = args.input_path
     else:
         cfn_url, bucket_name = upload_cfn(args.input_path)
     try:
-        param = generate_parameter(args.param, args.s3_bucket_url_parameter_key_name)
+        param = generate_parameter(args.param, args.s3_bucket_url_parameter_key_name, bucket_name)
         stack = create_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.role_arn)
     except Exception as e:
         logger.error(e)
