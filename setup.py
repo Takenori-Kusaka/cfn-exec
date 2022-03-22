@@ -28,9 +28,8 @@ setup (
     keywords='aws',
     include_package_data=True,
     install_requires=[
-        'boto3>=1.18.54',
         'requests>=2.27.1',
-        'awscli>=1.22.77',
+        'awscli>=1.22.77'
     ],
     classifiers=[
         'Programming Language :: Python :: 3.7',
