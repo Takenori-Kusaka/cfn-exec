@@ -166,8 +166,11 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
         # DisableRollback=disable_rollback,
         # RoleARN=role_arn if role_arn != None else ''
     )
+    logger.info("CFn Stack start.")
+    waiter = client.get_waiter('stack_create_complete')
+    waiter.wait(StackName=stack_name) # スタック完了まで待つ
+    logger.info("CFn Stack end.") # スタック完了後に実行される処理
     return response
-
 
 def main():
     """cfn-exec main"""
@@ -252,8 +255,7 @@ def main():
     if isUrl(args.input_path):
         pass
     else:
-        if args.s3_bucket_url_parameter_key_name != None:
-            delete_bucket(bucket_name)
+        delete_bucket(bucket_name)
 
     logger.info('Successfully to create stack: ' + stack['StackId'])
 
