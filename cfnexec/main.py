@@ -252,7 +252,8 @@ def main():
     if isUrl(args.input_path):
         pass
     else:
-        delete_bucket(bucket_name)
+        if args.s3_bucket_url_parameter_key_name != None:
+            delete_bucket(bucket_name)
 
     logger.info('Successfully to create stack: ' + stack['StackId'])
 
