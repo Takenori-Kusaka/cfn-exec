@@ -31,6 +31,7 @@ setup (
         'boto3>=1.18.54',
         'pyyaml>=6.0',
         'requests>=2.27.1',
+        'awscli>=1.22.77',
     ],
     classifiers=[
         'Programming Language :: Python :: 3.7',
