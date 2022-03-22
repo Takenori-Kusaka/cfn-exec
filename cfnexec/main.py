@@ -159,13 +159,31 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
     response = client.validate_template(
         TemplateURL=cfn_url
     )
-    response = client.create_stack(
-        StackName=stack_name,
-        TemplateURL=cfn_url,
-        Parameters=param_list
-        # DisableRollback=disable_rollback,
-        # RoleARN=role_arn if role_arn != None else ''
-    )
+    if role_arn != None:
+        response = client.create_stack(
+            StackName=stack_name,
+            TemplateURL=cfn_url,
+            Parameters=param_list,
+            Capabilities=[
+                'CAPABILITY_IAM',
+                'CAPABILITY_NAMED_IAM',
+                'CAPABILITY_AUTO_EXPAND'
+            ],
+            DisableRollback=disable_rollback,
+            RoleARN=role_arn
+        )
+    else:
+        response = client.create_stack(
+            StackName=stack_name,
+            TemplateURL=cfn_url,
+            Parameters=param_list,
+            Capabilities=[
+                'CAPABILITY_IAM',
+                'CAPABILITY_NAMED_IAM',
+                'CAPABILITY_AUTO_EXPAND'
+            ],
+            DisableRollback=disable_rollback
+        )
     logger.info("CFn Stack start.")
     waiter = client.get_waiter('stack_create_complete')
     waiter.wait(StackName=stack_name) # スタック完了まで待つ
