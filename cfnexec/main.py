@@ -156,38 +156,91 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
     logger.info('StackName: ' + stack_name)
     logger.info('CFn URL: ' + cfn_url)
     logger.info('Parameters: ' + json.dumps(param_list))
+    
     response = client.validate_template(
         TemplateURL=cfn_url
     )
-    if role_arn != None:
-        response = client.create_stack(
-            StackName=stack_name,
-            TemplateURL=cfn_url,
-            Parameters=param_list,
-            Capabilities=[
-                'CAPABILITY_IAM',
-                'CAPABILITY_NAMED_IAM',
-                'CAPABILITY_AUTO_EXPAND'
-            ],
-            DisableRollback=disable_rollback,
-            RoleARN=role_arn
-        )
+    
+    response = client.describe_stacks(
+        StackName=stack_name
+    )
+    if len(response['Stacks']) == 0:
+        if role_arn != None:
+            response = client.create_stack(
+                StackName=stack_name,
+                TemplateURL=cfn_url,
+                Parameters=param_list,
+                Capabilities=[
+                    'CAPABILITY_IAM',
+                    'CAPABILITY_NAMED_IAM',
+                    'CAPABILITY_AUTO_EXPAND'
+                ],
+                DisableRollback=disable_rollback,
+                RoleARN=role_arn
+            )
+        else:
+            response = client.create_stack(
+                StackName=stack_name,
+                TemplateURL=cfn_url,
+                Parameters=param_list,
+                Capabilities=[
+                    'CAPABILITY_IAM',
+                    'CAPABILITY_NAMED_IAM',
+                    'CAPABILITY_AUTO_EXPAND'
+                ],
+                DisableRollback=disable_rollback
+            )
+        logger.info("CFn Stack start to create.")
+        waiter = client.get_waiter('stack_create_complete')
+        waiter.wait(StackName=stack_name) # スタック完了まで待つ
+        logger.info("CFn Stack end to create.") # スタック完了後に実行される処理
     else:
-        response = client.create_stack(
-            StackName=stack_name,
-            TemplateURL=cfn_url,
-            Parameters=param_list,
-            Capabilities=[
-                'CAPABILITY_IAM',
-                'CAPABILITY_NAMED_IAM',
-                'CAPABILITY_AUTO_EXPAND'
-            ],
-            DisableRollback=disable_rollback
+        logger.info("Since {} already exists, a changeset is created.".format(stack_name))
+        change_set_name = stack_name + str(uuid.uuid4())
+        if role_arn != None:
+            response = client.create_stack_set(
+                StackSetName=change_set_name,
+                TemplateURL=cfn_url,
+                StackId=response['Stacks'][0]['StackId'],
+                Parameters=param_list,
+                Capabilities=[
+                    'CAPABILITY_IAM',
+                    'CAPABILITY_NAMED_IAM',
+                    'CAPABILITY_AUTO_EXPAND'
+                ],
+                ExecutionRoleName=role_arn,
+                ManagedExecution={
+                    'Active': True
+                }
+            )
+        else:
+            response = client.create_stack_set(
+                StackSetName=change_set_name,
+                TemplateURL=cfn_url,
+                StackId=response['Stacks'][0]['StackId'],
+                Parameters=param_list,
+                Capabilities=[
+                    'CAPABILITY_IAM',
+                    'CAPABILITY_NAMED_IAM',
+                    'CAPABILITY_AUTO_EXPAND'
+                ],
+                ManagedExecution={
+                    'Active': True
+                }
+            )
+        response = client.describe_change_set(
+            ChangeSetName=change_set_name
         )
-    logger.info("CFn Stack start.")
-    waiter = client.get_waiter('stack_create_complete')
-    waiter.wait(StackName=stack_name) # スタック完了まで待つ
-    logger.info("CFn Stack end.") # スタック完了後に実行される処理
+        if len(response['Changes']) == 0:
+            logger.info("Cancel to execute change set because there are no changes.")
+        else:
+            response = client.execute_change_set(
+                ChangeSetName=change_set_name
+            )
+            logger.info("CFn Stack start to changeset.")
+            waiter = client.get_waiter('stack_create_complete')
+            waiter.wait(ChangeSetName=change_set_name) # スタック完了まで待つ
+            logger.info("CFn Stack end to changeset.") # スタック完了後に実行される処理
     return response
 
 def main():
