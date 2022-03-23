@@ -167,7 +167,7 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
         response = client.describe_stacks(
             StackName=stack_name
         )
-        if len(response['Stacks']) == 0:
+        if len(response['Stacks']) > 0:
             stack_exists = True
     except Exception as e:
         logger.debug(e)
