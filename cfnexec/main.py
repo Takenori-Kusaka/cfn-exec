@@ -14,6 +14,7 @@ try:
 except:
     import version
 import yaml
+import traceback
 from awscli.customizations.cloudformation.yamlhelper import yaml_parse
 
 logger = logging.getLogger(__name__)
@@ -168,7 +169,9 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
         )
         if len(response['Stacks']) == 0:
             stack_exists = True
-    except:
+    except Exception as e:
+        logger.debug(e)
+        logger.debug(traceback.format_exc())
         pass
     if not stack_exists:
         if role_arn != None:
@@ -345,7 +348,10 @@ def main():
     else:
         delete_bucket(bucket_name)
 
-    logger.info('Successfully to create stack: ' + stack['StackId'])
+    try:
+        logger.info('Successfully to create stack: ' + stack['StackId'])
+    except:
+        logger.error('Fail to create stack')
 
 if __name__ == "__main__":
     # execute only if run as a script
