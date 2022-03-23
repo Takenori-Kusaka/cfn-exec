@@ -161,10 +161,16 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
         TemplateURL=cfn_url
     )
     
-    response = client.describe_stacks(
-        StackName=stack_name
-    )
-    if len(response['Stacks']) == 0:
+    stack_exists = False
+    try:
+        response = client.describe_stacks(
+            StackName=stack_name
+        )
+        if len(response['Stacks']) == 0:
+            stack_exists = True
+    except:
+        pass
+    if not stack_exists:
         if role_arn != None:
             response = client.create_stack(
                 StackName=stack_name,
