@@ -151,7 +151,7 @@ def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str, b
             r['ParameterValue'] = 'https://{}.s3.amazonaws.com'.format(bucket_name)
     return result
 
-def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollback: bool, role_arn: str):
+def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollback: bool, role_arn: str, change_set_force_deploy: bool):
     client = boto3.client('cloudformation')
     logger.info('StackName: ' + stack_name)
     logger.info('CFn URL: ' + cfn_url)
@@ -228,19 +228,24 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
                     'Active': True
                 }
             )
+        logger.info("CFn start to create changeset.")
+        waiter = client.get_waiter('change_set_create_complete')
+        waiter.wait(ChangeSetName=change_set_name)
+        logger.info("CFn end to create changeset.")
         response = client.describe_change_set(
             ChangeSetName=change_set_name
         )
         if len(response['Changes']) == 0:
             logger.info("Cancel to execute change set because there are no changes.")
         else:
-            response = client.execute_change_set(
-                ChangeSetName=change_set_name
-            )
-            logger.info("CFn Stack start to changeset.")
-            waiter = client.get_waiter('stack_create_complete')
-            waiter.wait(ChangeSetName=change_set_name) # スタック完了まで待つ
-            logger.info("CFn Stack end to changeset.") # スタック完了後に実行される処理
+            if change_set_force_deploy:
+                response = client.execute_change_set(
+                    ChangeSetName=change_set_name
+                )
+                logger.info("CFn start to update stack.")
+                waiter = client.get_waiter('stack_update_complete')
+                waiter.wait(ChangeSetName=change_set_name) # スタック完了まで待つ
+                logger.info("CFn end to update stack.") # スタック完了後に実行される処理
     return response
 
 def main():
@@ -292,6 +297,12 @@ def main():
         help="Set the parameter key name to this, if the input path is a local file and you want to reflect the S3 bucket name to be uploaded in the parameter."
     )
     parser.add_argument(
+        "-csf", "--change-set-force-deploy",
+        action="store_true",
+        dest="change_set_force_deploy",
+        help="When the target Stack already exists and is to be deployed as a change set, enabling this option will apply the change set to the stack as is."
+    )
+    parser.add_argument(
         "-v", "--version",
         action='version',
         version=version.__version__,
@@ -320,7 +331,7 @@ def main():
         cfn_url, bucket_name = upload_cfn(args.input_path)
     try:
         param = generate_parameter(args.param, args.s3_bucket_url_parameter_key_name, bucket_name)
-        stack = create_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.role_arn)
+        stack = create_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.role_arn, args.change_set_force_deploy)
     except Exception as e:
         logger.error(e)
     if isUrl(args.input_path):
