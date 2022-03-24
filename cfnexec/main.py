@@ -231,12 +231,11 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list,
         waiter = client.get_waiter('stack_create_complete')
         waiter.wait(StackName=stack_name) # スタック完了まで待つ
         resources = get_resouces(stack_name)
-        if view_resources(resources):
-            logger.info("Creation to stack completed successfully!! : {}".format(stack_name))
-        else:
-            logger.info("Attempted to create but failed... : {}".format(stack_name))
     except Exception as e:
         logger.warning(e)
+    if view_resources(resources):
+        logger.info("Creation to stack completed successfully!! : {}".format(stack_name))
+    else:
         logger.info("Attempted to create but failed... : {}".format(stack_name))
     if delete_stack:
         if role_arn != None:
@@ -325,30 +324,45 @@ def create_change_set(stack_name: str, cfn_url: str, param_list: list,
         )
     stack_id = response['StackId']
     logger.info("Creating to change set... : " + change_set_name)
-    waiter = client.get_waiter('change_set_create_complete')
-    waiter.wait(
+    try:
+        waiter = client.get_waiter('change_set_create_complete')
+        waiter.wait(
+            ChangeSetName=change_set_name,
+            StackName=stack_name
+        )
+        logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
+    except Exception as e:
+        logger.warning(e)
+        
+    response = client.describe_change_set(
         ChangeSetName=change_set_name,
         StackName=stack_name
     )
-    logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
-    changes = get_changes(stack_name, change_set_name)
-    if len(changes) == 0:
-        logger.info("Nothing differents from the current.")
+    if response['Status'] == 'CREATE_COMPLETE':
+        logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
+        if 'StatusReason' in response:
+            logger.info('Reason: ' + response['StatusReason'])
+        changes = get_changes(stack_name, change_set_name)
+        if len(changes) == 0:
+            logger.info("Nothing differents from the current.")
+        else:
+            view_changes(changes)
+            if change_set_force_deploy:
+                logger.info("Execute to change set: " + change_set_name)
+                response = client.execute_change_set(
+                    ChangeSetName=change_set_name,
+                    StackName=stack_name
+                )
+                logger.info("Executing change set...")
+                waiter = client.get_waiter('stack_update_complete')
+                waiter.wait(
+                    StackName=stack_name
+                )
+                logger.info("Execution to change set completed successfully!! : {}".format(change_set_name))
     else:
-        view_changes(changes)
-        if change_set_force_deploy:
-            logger.info("Execute to change set: " + change_set_name)
-            response = client.execute_change_set(
-                ChangeSetName=change_set_name,
-                StackName=stack_name
-            )
-            logger.info("Executing change set...")
-            waiter = client.get_waiter('stack_update_complete')
-            waiter.wait(
-                StackName=stack_name
-            )
-            logger.info("Execution to change set completed successfully!! : {}".format(change_set_name))
-    logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
+        logger.info("Attempted to create but failed... : {}".format(change_set_name))
+        if 'StatusReason' in response:
+            logger.info('Reason: ' + response['StatusReason'])
     return stack_id
 
 def view_param(param_list: list):
