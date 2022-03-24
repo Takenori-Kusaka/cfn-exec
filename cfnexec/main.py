@@ -413,7 +413,7 @@ def main():
     parser.add_argument(
         "-dr", "--disable-roleback",
         action="store_true",
-        dest="disable_roleback",
+        dest="disable_rollback",
         help="Disable rollback on stack creation failure."
     )
     parser.add_argument(
