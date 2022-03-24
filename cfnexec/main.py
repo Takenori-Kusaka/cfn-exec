@@ -325,6 +325,7 @@ def create_change_set(stack_name: str, cfn_url: str, param_list: list,
             ChangeSetName=change_set_name,
             IncludeNestedStacks=True
         )
+    stack_id = response['StackId']
     logger.info("Creating to change set... : " + change_set_name)
     waiter = client.get_waiter('change_set_create_complete')
     waiter.wait(
@@ -332,15 +333,11 @@ def create_change_set(stack_name: str, cfn_url: str, param_list: list,
         StackName=stack_name
     )
     logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
-    response = client.describe_change_set(
-        ChangeSetName=change_set_name,
-        StackName=stack_name
-    )
-    stack_id = response['StackId']
-    if len(response['Changes']) == 0:
+    changes = get_changes(stack_name, change_set_name)
+    if len(changes) == 0:
         logger.info("Nothing differents from the current.")
     else:
-        view_changes(response['Changes'])
+        view_changes(changes)
         if change_set_force_deploy:
             logger.info("Execute to change set: " + change_set_name)
             response = client.execute_change_set(
