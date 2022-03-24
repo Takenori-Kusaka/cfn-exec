@@ -237,7 +237,10 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
             )
         logger.info("CFn start to create changeset.")
         waiter = client.get_waiter('change_set_create_complete')
-        waiter.wait(ChangeSetName=change_set_name)
+        waiter.wait(
+            ChangeSetName=change_set_name,
+            StackName=stack_name
+        )
         logger.info("CFn end to create changeset.")
         response = client.describe_change_set(
             ChangeSetName=change_set_name
