@@ -17,7 +17,52 @@ note: If you are using the nested call function of Cloudformation, you need to m
 
 ### cli options
 
-**TBD**
+```sh
+usage: cfn-exec [-h] [-i INPUT_PATH] [-n STACK_NAME] [-p PARAM]
+                [--role-arn ROLE_ARN] [-s3 S3_BUCKET_URL_PARAMETER_KEY_NAME]
+                [-csf] [-dr] [-del] [-v] [-V]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT_PATH, --input-path INPUT_PATH
+                        Cloudformation file url path having Cloudformation
+                        files. Supported yaml and json. If this path is a
+                        folder, it will be detected recursively.
+  -n STACK_NAME, --stack-name STACK_NAME
+                        The name that's associated with the stack. The name
+                        must be unique in the Region in which you are creating
+                        the stack.
+  -p PARAM, --parameter-file PARAM
+                        Parameter file
+  --role-arn ROLE_ARN   The Amazon Resource Name (ARN) of an Identity and
+                        Access Management (IAM) role that CloudFormation
+                        assumes to create the stack. CloudFormation uses the
+                        role's credentials to make calls on your behalf.
+                        CloudFormation always uses this role for all future
+                        operations on the stack. Provided that users have
+                        permission to operate on the stack, CloudFormation
+                        uses this role even if the users don't have permission
+                        to pass it. Ensure that the role grants least
+                        privilege. If you don't specify a value,
+                        CloudFormation uses the role that was previously
+                        associated with the stack. If no role is available,
+                        CloudFormation uses a temporary session that's
+                        generated from your user credentials.
+  -s3 S3_BUCKET_URL_PARAMETER_KEY_NAME, --s3-bucket-url-parameter-key-name S3_BUCKET_URL_PARAMETER_KEY_NAME
+                        Set the parameter key name to this, if the input path
+                        is a local file and you want to reflect the S3 bucket
+                        name to be uploaded in the parameter.
+  -csf, --change-set-force-deploy
+                        When the target Stack already exists and is to be
+                        deployed as a change set, enabling this option will
+                        apply the change set to the stack as is.
+  -dr, --disable-roleback
+                        Disable rollback on stack creation failure.
+  -del, --delete-stack  After creating a stack, the stack is deleted
+                        regardless of success or failure.
+  -v, --version         Show version information and quit.
+  -V, --verbose         give more detailed output
+```
 
 ### parameter file format
 

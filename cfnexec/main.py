@@ -196,7 +196,6 @@ def get_resouces(stack_name: str):
 def create_stack(stack_name: str, cfn_url: str, param_list: list,
                 disable_rollback: bool,
                 delete_stack: bool,
-                delete_stack_when_failure: bool,
                 role_arn: str
     ):
     client = boto3.client('cloudformation')
@@ -228,19 +227,18 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list,
         )
     stack_id = response['StackId']
     logger.info("Creating to stack... : " + stack_name)
-    waiter = client.get_waiter('stack_create_complete')
-    waiter.wait(StackName=stack_name) # スタック完了まで待つ
-    resources = get_resouces(stack_name)
-    delete = False
-    if view_resources(resources):
-        logger.info("Creation to stack completed successfully!! : {}".format(stack_name))
-        if delete_stack:
-            delete = True
-    else:
+    try:
+        waiter = client.get_waiter('stack_create_complete')
+        waiter.wait(StackName=stack_name) # スタック完了まで待つ
+        resources = get_resouces(stack_name)
+        if view_resources(resources):
+            logger.info("Creation to stack completed successfully!! : {}".format(stack_name))
+        else:
+            logger.info("Attempted to create but failed... : {}".format(stack_name))
+    except Exception as e:
+        logger.warning(e)
         logger.info("Attempted to create but failed... : {}".format(stack_name))
-        if delete_stack_when_failure or delete_stack:
-            delete = True
-    if delete:
+    if delete_stack:
         if role_arn != None:
             response = client.delete_stack(
                 StackName=stack_name,
@@ -371,7 +369,6 @@ def view_param(param_list: list):
 def request_stack(stack_name: str, cfn_url: str, param_list: list,
                 disable_rollback: bool,
                 delete_stack: bool,
-                delete_stack_when_failure: bool,
                 role_arn: str,
                 change_set_force_deploy: bool
     ):
@@ -398,7 +395,7 @@ def request_stack(stack_name: str, cfn_url: str, param_list: list,
         logger.debug(e)
         pass
     if not stack_exists:
-        stack_id = create_stack(stack_name, cfn_url, param_list, disable_rollback, delete_stack, delete_stack_when_failure, role_arn)
+        stack_id = create_stack(stack_name, cfn_url, param_list, disable_rollback, delete_stack, role_arn)
     else:
         stack_id = create_change_set(stack_name, cfn_url, param_list, role_arn, change_set_force_deploy)
         
@@ -463,12 +460,6 @@ def main():
         help="After creating a stack, the stack is deleted regardless of success or failure."
     )
     parser.add_argument(
-        "-del-fail", "--delete-stack-when-failure",
-        action="store_true",
-        dest="delete_stack_when_failure",
-        help="If stack creation fails, the stack is deleted."
-    )
-    parser.add_argument(
         "-v", "--version",
         action='version',
         version=version.__version__,
@@ -497,7 +488,7 @@ def main():
         cfn_url, bucket_name = upload_cfn(args.input_path)
     try:
         param = generate_parameter(args.param, args.s3_bucket_url_parameter_key_name, bucket_name)
-        request_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.delete_stack, args.delete_stack_when_failure, args.role_arn, args.change_set_force_deploy)
+        request_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.delete_stack, args.role_arn, args.change_set_force_deploy)
     except Exception as e:
         logger.error(e)
         logger.error('Fail to create or update stack')
