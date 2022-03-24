@@ -170,7 +170,7 @@ def view_resources(resources: list):
             t.append(r['Timestamp'])
             t.append(r['ResourceStatus'])
             t.append(r['LogicalResourceId'])
-            t.append(r['ResourceStatusReason'])
+            t.append(r['ResourceStatusReason'] if 'ResourceStatusReason' in r else '')
             d.append(t)
             if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
                 success = False
