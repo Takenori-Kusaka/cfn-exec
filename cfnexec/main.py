@@ -1,5 +1,6 @@
 """This is a cfn-exec main program."""
 import logging
+import resource
 logger = logging.getLogger(__name__)
 
 try:
@@ -160,27 +161,37 @@ def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str, b
 def view_resources(resources: list):
     result = ''
     success = True
-    headers=["Index", "Timestamp", "ResourceStatus", "LogicalResourceId", "ResourceStatusReason"]
+    headers=["Index", "Timestamp", "ResourceStatus", "LogicalResourceId", "PhysicalResourceId", "ResourceStatusReason"]
     d = []
     i = 0
-    try:
-        for r in resources:
-            t = []
-            t.append(str(i))
-            t.append(r['Timestamp'])
-            t.append(r['ResourceStatus'])
-            t.append(r['LogicalResourceId'])
-            t.append(r['ResourceStatusReason'] if 'ResourceStatusReason' in r else '')
-            d.append(t)
-            if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
-                success = False
-            i = i + 1
-        result = '\n' + str(tabulate(d, headers=headers)) + '\n'
-        logger.info(result)
-    except Exception as e:
-        logger.info(e)
-        logger.info(traceback.format_exc())
+    for r in resources:
+        t = []
+        t.append(str(i))
+        t.append(r['Timestamp'])
+        t.append(r['ResourceStatus'])
+        t.append(r['LogicalResourceId'])
+        t.append(r['PhysicalResourceId'])
+        t.append(r['ResourceStatusReason'] if 'ResourceStatusReason' in r else '')
+        d.append(t)
+        if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
+            success = False
+        i = i + 1
+    result = '\n' + str(tabulate(d, headers=headers)) + '\n'
+    logger.info(result)
     return success
+
+def get_resouces(stack_name: str):
+    result = []
+    client = boto3.client('cloudformation')
+    response = client.describe_stack_resources(
+        StackName=stack_name
+    )
+    for r in response['StackResources']:
+        if "arn:aws:cloudformation" in r['PhysicalResourceId']:
+            result.extend(get_resouces(r['PhysicalResourceId']))
+        else:
+            result.append(r)
+    return result    
 
 def create_stack(stack_name: str, cfn_url: str, param_list: list,
                 disable_rollback: bool,
@@ -219,11 +230,9 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list,
     logger.info("Creating to stack... : " + stack_name)
     waiter = client.get_waiter('stack_create_complete')
     waiter.wait(StackName=stack_name) # スタック完了まで待つ
-    response = client.describe_stack_resources(
-        StackName=stack_name
-    )
+    resources = get_resouces(stack_name)
     delete = False
-    if view_resources(response['StackResources']):
+    if view_resources(resources):
         logger.info("Creation to stack completed successfully!! : {}".format(stack_name))
         if delete_stack:
             delete = True
@@ -249,7 +258,7 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list,
 
 def view_changes(change: list):
     result = ''
-    headers=["Index", "Type", "Action", "LogicalResourceId", "ResourceType", "Replacement"]
+    headers=["Index", "Type", "Action", "LogicalResourceId", "PhysicalResourceId", "ResourceType", "Replacement"]
     d = []
     i = 0
     for c in change:
@@ -258,6 +267,7 @@ def view_changes(change: list):
         t.append(c['Type'])
         t.append(c['ResourceChange']['Action'])
         t.append(c['ResourceChange']['LogicalResourceId'])
+        t.append(c['ResourceChange']['PhysicalResourceId'])
         t.append(c['ResourceChange']['ResourceType'])
         t.append(c['ResourceChange']['Replacement'])
         d.append(t)
@@ -265,12 +275,26 @@ def view_changes(change: list):
     result = '\n' + str(tabulate(d, headers=headers)) + '\n'
     logger.info(result)
 
+def get_changes(stack_name: str, change_set_name: str):
+    result = []
+    client = boto3.client('cloudformation')
+    response = client.describe_change_set(
+        ChangeSetName=change_set_name,
+        StackName=stack_name
+    )
+    for r in response['Changes']:
+        if "arn:aws:cloudformation" in r['ResourceChange']['PhysicalResourceId']:
+            result.extend(get_changes(r['ResourceChange']['PhysicalResourceId'], r['ResourceChange']['ChangeSetId']))
+        else:
+            result.append(r)
+    return result 
+
 def create_change_set(stack_name: str, cfn_url: str, param_list: list,
                 role_arn: str,
                 change_set_force_deploy: bool
     ):
     client = boto3.client('cloudformation')
-    logger.info("Since {} already exists, a changeset is created.".format(stack_name))
+    logger.info("Since {} already exists, create new change set.".format(stack_name))
     change_set_name = stack_name + str(uuid.uuid4())
     if role_arn != None:
         response = client.create_change_set(
