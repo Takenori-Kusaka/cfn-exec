@@ -1,23 +1,28 @@
 """This is a cfn-exec main program."""
-import requests
-import json
-import os
-import argparse
-import re
-import boto3
 import logging
-from pathlib import Path
-import uuid
-import glob
-try:
-    from cfnexec import version
-except:
-    import version
-import yaml
-import traceback
-from awscli.customizations.cloudformation.yamlhelper import yaml_parse
-
 logger = logging.getLogger(__name__)
+
+try:
+    import requests
+    import json
+    import os
+    import argparse
+    import re
+    import boto3
+    from pathlib import Path
+    import uuid
+    import glob
+    try:
+        from cfnexec import version
+    except:
+        import version
+    import yaml
+    import traceback
+    from awscli.customizations.cloudformation.yamlhelper import yaml_parse
+    from tabulate import tabulate
+except Exception as e:
+    logger.error(e)
+
 
 def isUrl(path: str):
     pattern = r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
@@ -152,12 +157,192 @@ def generate_parameter(param_path: str, s3_bucket_url_parameter_key_name: str, b
             r['ParameterValue'] = 'https://{}.s3.amazonaws.com'.format(bucket_name)
     return result
 
-def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollback: bool, role_arn: str, change_set_force_deploy: bool):
+def view_resources(resources: list):
+    result = ''
+    success = True
+    headers=["Index", "Timestamp", "ResourceStatus", "LogicalResourceId", "ResourceStatusReason"]
+    d = []
+    i = 0
+    'CREATE_IN_PROGRESS'|'CREATE_FAILED'|'CREATE_COMPLETE'|'DELETE_IN_PROGRESS'|'DELETE_FAILED'|'DELETE_COMPLETE'|'DELETE_SKIPPED'|'UPDATE_IN_PROGRESS'|'UPDATE_FAILED'|'UPDATE_COMPLETE'|'IMPORT_FAILED'|'IMPORT_COMPLETE'|'IMPORT_IN_PROGRESS'|'IMPORT_ROLLBACK_IN_PROGRESS'|'IMPORT_ROLLBACK_FAILED'|'IMPORT_ROLLBACK_COMPLETE'|'UPDATE_ROLLBACK_IN_PROGRESS'|'UPDATE_ROLLBACK_COMPLETE'|'UPDATE_ROLLBACK_FAILED'|'ROLLBACK_IN_PROGRESS'|'ROLLBACK_COMPLETE'|'ROLLBACK_FAILED',
+    for r in resources:
+        t = []
+        t.append(str(i))
+        t.append(r['Timestamp'])
+        t.append(r['ResourceStatus'])
+        t.append(r['LogicalResourceId'])
+        t.append(r['ResourceStatusReason'])
+        d.append(t)
+        if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
+            success = False
+        i = i + 1
+    result = str(tabulate(d, headers=headers))
+    logger.info(result)
+    return success
+
+def create_stack(stack_name: str, cfn_url: str, param_list: list,
+                disable_rollback: bool,
+                delete_stack: bool,
+                delete_stack_when_failure: bool,
+                role_arn: str
+    ):
+    client = boto3.client('cloudformation')
+    logger.info("Create a new {}.".format(stack_name))
+    if role_arn != None:
+        response = client.create_stack(
+            StackName=stack_name,
+            TemplateURL=cfn_url,
+            Parameters=param_list,
+            Capabilities=[
+                'CAPABILITY_IAM',
+                'CAPABILITY_NAMED_IAM',
+                'CAPABILITY_AUTO_EXPAND'
+            ],
+            DisableRollback=disable_rollback,
+            RoleARN=role_arn
+        )
+    else:
+        response = client.create_stack(
+            StackName=stack_name,
+            TemplateURL=cfn_url,
+            Parameters=param_list,
+            Capabilities=[
+                'CAPABILITY_IAM',
+                'CAPABILITY_NAMED_IAM',
+                'CAPABILITY_AUTO_EXPAND'
+            ],
+            DisableRollback=disable_rollback
+        )
+    stack_id = response['StackId']
+    logger.info("Creating to stack... : " + stack_name)
+    waiter = client.get_waiter('stack_create_complete')
+    waiter.wait(StackName=stack_name) # スタック完了まで待つ
+    response = client.describe_stack_resources(
+        StackName=stack_name
+    )
+    delete = False
+    if view_resources(response['StackResources']):
+        logger.info("Creation to stack completed successfully!! : {}".format(stack_name))
+        if delete_stack:
+            delete = True
+    else:
+        logger.info("Attempted to create but failed... : {}".format(stack_name))
+        if delete_stack_when_failure or delete_stack:
+            delete = True
+    if delete:
+        if role_arn != None:
+            response = client.delete_stack(
+                StackName=stack_name,
+                RoleARN=role_arn
+            )
+        else:
+            response = client.delete_stack(
+                StackName=stack_name
+            )
+        logger.info("Deleting to stack... : " + stack_name)
+        waiter = client.get_waiter('stack_delete_complete')
+        waiter.wait(StackName=stack_name)
+        logger.info("Deletion to stack completed. : {}".format(stack_name))
+    return stack_id
+
+def view_changes(change: list):
+    result = ''
+    headers=["Index", "Type", "Action", "LogicalResourceId", "ResourceType", "Replacement"]
+    d = []
+    i = 0
+    for c in change:
+        t = []
+        t.append(str(i))
+        t.append(c['Type'])
+        t.append(c['ResourceChange']['Action'])
+        t.append(c['ResourceChange']['LogicalResourceId'])
+        t.append(c['ResourceChange']['ResourceType'])
+        t.append(c['ResourceChange']['Replacement'])
+        d.append(t)
+        i = i + 1
+    result = str(tabulate(d, headers=headers))
+    logger.info(result)
+
+def create_change_set(stack_name: str, cfn_url: str, param_list: list,
+                role_arn: str,
+                change_set_force_deploy: bool
+    ):
+    client = boto3.client('cloudformation')
+    logger.info("Since {} already exists, a changeset is created.".format(stack_name))
+    change_set_name = stack_name + str(uuid.uuid4())
+    if role_arn != None:
+        response = client.create_change_set(
+            StackName=stack_name,
+            TemplateURL=cfn_url,
+            UsePreviousTemplate=False,
+            Parameters=param_list,
+            Capabilities=[
+                'CAPABILITY_IAM',
+                'CAPABILITY_NAMED_IAM',
+                'CAPABILITY_AUTO_EXPAND'
+            ],
+            RoleARN=role_arn,
+            ChangeSetName=change_set_name,
+            IncludeNestedStacks=True
+        )
+    else:
+        response = client.create_change_set(
+            StackName=stack_name,
+            TemplateURL=cfn_url,
+            UsePreviousTemplate=False,
+            Parameters=param_list,
+            Capabilities=[
+                'CAPABILITY_IAM',
+                'CAPABILITY_NAMED_IAM',
+                'CAPABILITY_AUTO_EXPAND'
+            ],
+            ChangeSetName=change_set_name,
+            IncludeNestedStacks=True
+        )
+    logger.info("Creating to change set... : " + change_set_name)
+    waiter = client.get_waiter('change_set_create_complete')
+    waiter.wait(
+        ChangeSetName=change_set_name,
+        StackName=stack_name
+    )
+    logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
+    response = client.describe_change_set(
+        ChangeSetName=change_set_name,
+        StackName=stack_name
+    )
+    stack_id = response['StackId']
+    if len(response['Changes']) == 0:
+        logger.info("Nothing differents from the current.")
+    else:
+        view_changes(response['Changes'])
+        if change_set_force_deploy:
+            logger.info("Execute to change set: " + change_set_name)
+            response = client.execute_change_set(
+                ChangeSetName=change_set_name,
+                StackName=stack_name
+            )
+            logger.info("Executing change set...")
+            waiter = client.get_waiter('stack_update_complete')
+            waiter.wait(
+                StackName=stack_name
+            )
+            logger.info("Execution to change set completed successfully!! : {}".format(change_set_name))
+    logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
+    return stack_id
+
+def request_stack(stack_name: str, cfn_url: str, param_list: list,
+                disable_rollback: bool,
+                delete_stack: bool,
+                delete_stack_when_failure: bool,
+                role_arn: str,
+                change_set_force_deploy: bool
+    ):
     client = boto3.client('cloudformation')
     logger.info('StackName: ' + stack_name)
     logger.info('CFn URL: ' + cfn_url)
     logger.info('Parameters: ' + json.dumps(param_list))
     
+    stack_id = ''
+
     response = client.validate_template(
         TemplateURL=cfn_url
     )
@@ -171,96 +356,13 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
             stack_exists = True
     except Exception as e:
         logger.debug(e)
-        logger.debug(traceback.format_exc())
         pass
     if not stack_exists:
-        if role_arn != None:
-            response = client.create_stack(
-                StackName=stack_name,
-                TemplateURL=cfn_url,
-                Parameters=param_list,
-                Capabilities=[
-                    'CAPABILITY_IAM',
-                    'CAPABILITY_NAMED_IAM',
-                    'CAPABILITY_AUTO_EXPAND'
-                ],
-                DisableRollback=disable_rollback,
-                RoleARN=role_arn
-            )
-        else:
-            response = client.create_stack(
-                StackName=stack_name,
-                TemplateURL=cfn_url,
-                Parameters=param_list,
-                Capabilities=[
-                    'CAPABILITY_IAM',
-                    'CAPABILITY_NAMED_IAM',
-                    'CAPABILITY_AUTO_EXPAND'
-                ],
-                DisableRollback=disable_rollback
-            )
-        logger.info("CFn Stack start to create.")
-        waiter = client.get_waiter('stack_create_complete')
-        waiter.wait(StackName=stack_name) # スタック完了まで待つ
-        logger.info("CFn Stack end to create.") # スタック完了後に実行される処理
+        stack_id = create_stack(stack_name, cfn_url, param_list, disable_rollback, delete_stack, delete_stack_when_failure, role_arn)
     else:
-        logger.info("Since {} already exists, a changeset is created.".format(stack_name))
-        change_set_name = stack_name + str(uuid.uuid4())
-        if role_arn != None:
-            response = client.create_change_set(
-                StackName=stack_name,
-                TemplateURL=cfn_url,
-                UsePreviousTemplate=False,
-                Parameters=param_list,
-                Capabilities=[
-                    'CAPABILITY_IAM',
-                    'CAPABILITY_NAMED_IAM',
-                    'CAPABILITY_AUTO_EXPAND'
-                ],
-                RoleARN=role_arn,
-                ChangeSetName=change_set_name,
-                IncludeNestedStacks=True
-            )
-        else:
-            response = client.create_change_set(
-                StackName=stack_name,
-                TemplateURL=cfn_url,
-                UsePreviousTemplate=False,
-                Parameters=param_list,
-                Capabilities=[
-                    'CAPABILITY_IAM',
-                    'CAPABILITY_NAMED_IAM',
-                    'CAPABILITY_AUTO_EXPAND'
-                ],
-                ChangeSetName=change_set_name,
-                IncludeNestedStacks=True
-            )
-        logger.info("CFn start to create changeset.")
-        waiter = client.get_waiter('change_set_create_complete')
-        waiter.wait(
-            ChangeSetName=change_set_name,
-            StackName=stack_name
-        )
-        logger.info("CFn end to create changeset.")
-        response = client.describe_change_set(
-            ChangeSetName=change_set_name,
-            StackName=stack_name
-        )
-        if len(response['Changes']) == 0:
-            logger.info("Cancel to execute change set because there are no changes.")
-        else:
-            if change_set_force_deploy:
-                response = client.execute_change_set(
-                    ChangeSetName=change_set_name,
-                    StackName=stack_name
-                )
-                logger.info("CFn start to update stack.")
-                waiter = client.get_waiter('stack_update_complete')
-                waiter.wait(
-                    StackName=stack_name
-                )
-                logger.info("CFn end to update stack.") # スタック完了後に実行される処理
-    return response
+        stack_id = create_change_set(stack_name, cfn_url, param_list, role_arn, change_set_force_deploy)
+        
+    return stack_id
 
 def main():
     """cfn-exec main"""
@@ -289,14 +391,6 @@ def main():
         help="Parameter file"
     )
     parser.add_argument(
-        "--disable-rollback",
-        type=bool,
-        action="store",
-        default=False,
-        dest="disable_rollback",
-        help="Set to true to disable rollback of the stack if stack creation failed. You can specify either DisableRollback or OnFailure , but not both."
-    )
-    parser.add_argument(
         "--role-arn",
         type=str,
         action="store",
@@ -315,6 +409,24 @@ def main():
         action="store_true",
         dest="change_set_force_deploy",
         help="When the target Stack already exists and is to be deployed as a change set, enabling this option will apply the change set to the stack as is."
+    )
+    parser.add_argument(
+        "-dr", "--disable-roleback",
+        action="store_true",
+        dest="disable_roleback",
+        help="Disable rollback on stack creation failure."
+    )
+    parser.add_argument(
+        "-del", "--delete-stack",
+        action="store_true",
+        dest="delete_stack",
+        help="After creating a stack, the stack is deleted regardless of success or failure."
+    )
+    parser.add_argument(
+        "-del-fail", "--delete-stack-when-failure",
+        action="store_true",
+        dest="delete_stack_when_failure",
+        help="If stack creation fails, the stack is deleted."
     )
     parser.add_argument(
         "-v", "--version",
@@ -336,7 +448,7 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO, format='%(message)s')
         
-    logger.info('Start to create stack')
+    logger.debug('Start to create stack')
 
     bucket_name = ''
     if isUrl(args.input_path):
@@ -345,18 +457,14 @@ def main():
         cfn_url, bucket_name = upload_cfn(args.input_path)
     try:
         param = generate_parameter(args.param, args.s3_bucket_url_parameter_key_name, bucket_name)
-        stack = create_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.role_arn, args.change_set_force_deploy)
+        request_stack(args.stack_name, cfn_url, param, args.disable_rollback, args.delete_stack, args.delete_stack_when_failure, args.role_arn, args.change_set_force_deploy)
     except Exception as e:
         logger.error(e)
+        logger.error('Fail to create or update stack')
     if isUrl(args.input_path):
         pass
     else:
         delete_bucket(bucket_name)
-
-    try:
-        logger.info('Successfully to create stack: ' + stack['StackId'])
-    except:
-        logger.error('Fail to create stack')
 
 if __name__ == "__main__":
     # execute only if run as a script

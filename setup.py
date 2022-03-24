@@ -28,8 +28,10 @@ setup (
     keywords='aws',
     include_package_data=True,
     install_requires=[
-        'requests>=2.27.1',
-        'awscli>=1.22.77'
+        'requests',
+        'awscli',
+        'boto3',
+        'tabulate'
     ],
     classifiers=[
         'Programming Language :: Python :: 3.7',
