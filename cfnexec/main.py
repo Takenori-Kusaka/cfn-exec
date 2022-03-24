@@ -243,7 +243,8 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
         )
         logger.info("CFn end to create changeset.")
         response = client.describe_change_set(
-            ChangeSetName=change_set_name
+            ChangeSetName=change_set_name,
+            StackName=stack_name
         )
         if len(response['Changes']) == 0:
             logger.info("Cancel to execute change set because there are no changes.")
