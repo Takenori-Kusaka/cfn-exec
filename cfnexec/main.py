@@ -207,35 +207,33 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
         logger.info("Since {} already exists, a changeset is created.".format(stack_name))
         change_set_name = stack_name + str(uuid.uuid4())
         if role_arn != None:
-            response = client.create_stack_set(
-                StackSetName=change_set_name,
+            response = client.create_change_set(
+                StackName=stack_name,
                 TemplateURL=cfn_url,
-                StackId=response['Stacks'][0]['StackId'],
+                UsePreviousTemplate=False,
                 Parameters=param_list,
                 Capabilities=[
                     'CAPABILITY_IAM',
                     'CAPABILITY_NAMED_IAM',
                     'CAPABILITY_AUTO_EXPAND'
                 ],
-                ExecutionRoleName=role_arn,
-                ManagedExecution={
-                    'Active': True
-                }
+                RoleARN=role_arn,
+                ChangeSetName=change_set_name,
+                IncludeNestedStacks=True
             )
         else:
-            response = client.create_stack_set(
-                StackSetName=change_set_name,
+            response = client.create_change_set(
+                StackName=stack_name,
                 TemplateURL=cfn_url,
-                StackId=response['Stacks'][0]['StackId'],
+                UsePreviousTemplate=False,
                 Parameters=param_list,
                 Capabilities=[
                     'CAPABILITY_IAM',
                     'CAPABILITY_NAMED_IAM',
                     'CAPABILITY_AUTO_EXPAND'
                 ],
-                ManagedExecution={
-                    'Active': True
-                }
+                ChangeSetName=change_set_name,
+                IncludeNestedStacks=True
             )
         logger.info("CFn start to create changeset.")
         waiter = client.get_waiter('change_set_create_complete')
