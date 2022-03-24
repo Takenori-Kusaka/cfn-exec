@@ -163,19 +163,23 @@ def view_resources(resources: list):
     headers=["Index", "Timestamp", "ResourceStatus", "LogicalResourceId", "ResourceStatusReason"]
     d = []
     i = 0
-    for r in resources:
-        t = []
-        t.append(str(i))
-        t.append(r['Timestamp'])
-        t.append(r['ResourceStatus'])
-        t.append(r['LogicalResourceId'])
-        t.append(r['ResourceStatusReason'])
-        d.append(t)
-        if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
-            success = False
-        i = i + 1
-    result = '\n' + str(tabulate(d, headers=headers)) + '\n'
-    logger.info(result)
+    try:
+        for r in resources:
+            t = []
+            t.append(str(i))
+            t.append(r['Timestamp'])
+            t.append(r['ResourceStatus'])
+            t.append(r['LogicalResourceId'])
+            t.append(r['ResourceStatusReason'])
+            d.append(t)
+            if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
+                success = False
+            i = i + 1
+        result = '\n' + str(tabulate(d, headers=headers)) + '\n'
+        logger.info(result)
+    except Exception as e:
+        logger.info(e)
+        logger.info(traceback.format_exc())
     return success
 
 def create_stack(stack_name: str, cfn_url: str, param_list: list,
