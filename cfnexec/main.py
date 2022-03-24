@@ -251,7 +251,8 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
         else:
             if change_set_force_deploy:
                 response = client.execute_change_set(
-                    ChangeSetName=change_set_name
+                    ChangeSetName=change_set_name,
+                    StackName=stack_name
                 )
                 logger.info("CFn start to update stack.")
                 waiter = client.get_waiter('stack_update_complete')
