@@ -175,7 +175,7 @@ def view_resources(resources: list):
         if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
             success = False
         i = i + 1
-    result = str(tabulate(d, headers=headers))
+    result = '\n' + str(tabulate(d, headers=headers)) + '\n'
     logger.info(result)
     return success
 
@@ -259,7 +259,7 @@ def view_changes(change: list):
         t.append(c['ResourceChange']['Replacement'])
         d.append(t)
         i = i + 1
-    result = str(tabulate(d, headers=headers))
+    result = '\n' + str(tabulate(d, headers=headers)) + '\n'
     logger.info(result)
 
 def create_change_set(stack_name: str, cfn_url: str, param_list: list,
