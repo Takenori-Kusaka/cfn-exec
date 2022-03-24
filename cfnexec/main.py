@@ -256,7 +256,9 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list, disable_rollba
                 )
                 logger.info("CFn start to update stack.")
                 waiter = client.get_waiter('stack_update_complete')
-                waiter.wait(ChangeSetName=change_set_name) # スタック完了まで待つ
+                waiter.wait(
+                    StackName=stack_name
+                )
                 logger.info("CFn end to update stack.") # スタック完了後に実行される処理
     return response
 
