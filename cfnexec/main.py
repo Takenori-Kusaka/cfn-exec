@@ -163,7 +163,6 @@ def view_resources(resources: list):
     headers=["Index", "Timestamp", "ResourceStatus", "LogicalResourceId", "ResourceStatusReason"]
     d = []
     i = 0
-    'CREATE_IN_PROGRESS'|'CREATE_FAILED'|'CREATE_COMPLETE'|'DELETE_IN_PROGRESS'|'DELETE_FAILED'|'DELETE_COMPLETE'|'DELETE_SKIPPED'|'UPDATE_IN_PROGRESS'|'UPDATE_FAILED'|'UPDATE_COMPLETE'|'IMPORT_FAILED'|'IMPORT_COMPLETE'|'IMPORT_IN_PROGRESS'|'IMPORT_ROLLBACK_IN_PROGRESS'|'IMPORT_ROLLBACK_FAILED'|'IMPORT_ROLLBACK_COMPLETE'|'UPDATE_ROLLBACK_IN_PROGRESS'|'UPDATE_ROLLBACK_COMPLETE'|'UPDATE_ROLLBACK_FAILED'|'ROLLBACK_IN_PROGRESS'|'ROLLBACK_COMPLETE'|'ROLLBACK_FAILED',
     for r in resources:
         t = []
         t.append(str(i))
@@ -329,6 +328,21 @@ def create_change_set(stack_name: str, cfn_url: str, param_list: list,
     logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
     return stack_id
 
+def view_param(param_list: list):
+    result = ''
+    headers=["Index", "ParameterKey", "ParameterValue"]
+    d = []
+    i = 0
+    for p in param_list:
+        t = []
+        t.append(str(i))
+        t.append(p['ParameterKey'])
+        t.append(p['ParameterValue'])
+        d.append(t)
+        i = i + 1
+    result = '\n' + str(tabulate(d, headers=headers)) + '\n'
+    logger.info(result)
+
 def request_stack(stack_name: str, cfn_url: str, param_list: list,
                 disable_rollback: bool,
                 delete_stack: bool,
@@ -339,7 +353,8 @@ def request_stack(stack_name: str, cfn_url: str, param_list: list,
     client = boto3.client('cloudformation')
     logger.info('StackName: ' + stack_name)
     logger.info('CFn URL: ' + cfn_url)
-    logger.info('Parameters: ' + json.dumps(param_list))
+    logger.info('Parameters: ')
+    view_param(param_list)
     
     stack_id = ''
 
