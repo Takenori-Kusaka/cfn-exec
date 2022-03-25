@@ -52,10 +52,10 @@ def create_s3():
 
 def upload_file_to_s3(bucket_name: str, filepath_list: list, root_path: str):
     s3 = boto3.resource('s3', region_name=boto3.session.Session().region_name)
-    root_path_str = str(Path(root_path).resolve())
+    root_path_str = Path(root_path).resolve().as_posix()
     for f in filepath_list:
         logger.debug('Upload s3 bucket: ' + f)
-        f_str = str(Path(f).resolve())
+        f_str = Path(f).resolve().as_posix()
         s3.Object(bucket_name, f_str.replace(root_path_str, '')[1:]).upload_file(f)
 
 def get_public_url(bucket, target_object_path):
@@ -108,8 +108,8 @@ def find_cfn_files(base_folder_path: str):
 def upload_cfn(input_path: str):
     
     bucket_name = create_s3()
-    filepath_list = find_cfn_files(str(Path(input_path).parent))
-    upload_file_to_s3(bucket_name, filepath_list, str(Path(input_path).parent))
+    filepath_list = find_cfn_files(Path(input_path).parent.as_posix())
+    upload_file_to_s3(bucket_name, filepath_list, Path(input_path).parent.as_posix())
     return get_public_url(bucket_name, Path(input_path).name), bucket_name
 
 
@@ -228,9 +228,9 @@ def create_stack(stack_name: str, cfn_url: str, param_list: list,
     try:
         waiter = client.get_waiter('stack_create_complete')
         waiter.wait(StackName=stack_name) # スタック完了まで待つ
-        resources = get_resouces(stack_name)
     except Exception as e:
         logger.warning(e)
+    resources = get_resouces(stack_name)
     if view_resources(resources):
         logger.info("Creation to stack completed successfully!! : {}".format(stack_name))
     else:
