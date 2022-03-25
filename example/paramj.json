@@ -1,4 +1,4 @@
 {
-    "TemplateS3BucketURL": "https://raw.githubusercontent.com/Takenori-Kusaka/cfn-exec/main/example/input/",
+    "TemplateS3BucketURL": "TemplateS3BucketURL",
     "BucketName": "cfnexec-example-test-01234567890123456789"
 }
