@@ -290,7 +290,7 @@ def create_change_set(stack_name: str, cfn_url: str, param_list: list,
     ):
     client = boto3.client('cloudformation')
     logger.info("Since {} already exists, create new change set.".format(stack_name))
-    change_set_name = stack_name + str(uuid.uuid4())
+    change_set_name = stack_name + '-' + str(uuid.uuid4())
     if role_arn != None:
         response = client.create_change_set(
             StackName=stack_name,
