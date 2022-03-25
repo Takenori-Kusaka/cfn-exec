@@ -1,6 +1,5 @@
 """This is a cfn-exec main program."""
 import logging
-import resource
 logger = logging.getLogger(__name__)
 
 try:
@@ -18,7 +17,6 @@ try:
     except:
         import version
     import yaml
-    import traceback
     from awscli.customizations.cloudformation.yamlhelper import yaml_parse
     from tabulate import tabulate
 except Exception as e:
