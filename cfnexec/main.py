@@ -166,13 +166,14 @@ def view_resources(resources: list):
         t = []
         t.append(str(i))
         t.append(r['Timestamp'])
-        t.append(r['ResourceStatus'])
-        t.append(r['LogicalResourceId'])
-        t.append(r['PhysicalResourceId'])
+        t.append(r['ResourceStatus'] if 'ResourceStatus' in r else '')
+        t.append(r['LogicalResourceId'] if 'LogicalResourceId' in r else '')
+        t.append(r['PhysicalResourceId'] if 'PhysicalResourceId' in r else '')
         t.append(r['ResourceStatusReason'] if 'ResourceStatusReason' in r else '')
         d.append(t)
-        if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
-            success = False
+        if 'ResourceStatus' in r:
+            if r['ResourceStatus'] != "CREATE_COMPLETE" and r['ResourceStatus'] != "UPDATE_COMPLETE" and r['ResourceStatus'] != "IMPORT_COMPLETE":
+                success = False
         i = i + 1
     result = '\n' + str(tabulate(d, headers=headers)) + '\n'
     logger.info(result)
@@ -185,8 +186,11 @@ def get_resouces(stack_name: str):
         StackName=stack_name
     )
     for r in response['StackResources']:
-        if "arn:aws:cloudformation" in r['PhysicalResourceId']:
-            result.extend(get_resouces(r['PhysicalResourceId']))
+        if 'PhysicalResourceId' in r:
+            if "arn:aws:cloudformation" in r['PhysicalResourceId']:
+                result.extend(get_resouces(r['PhysicalResourceId']))
+            else:
+                result.append(r)
         else:
             result.append(r)
     return result    
