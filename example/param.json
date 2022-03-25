@@ -1,4 +1,4 @@
 {
-    "TemplateS3BucketURL": "https://cfn-exec-us-east-2-f0f165a5-f221-4b2f-9d69-34cb268d8c11.s3.us-east-2.amazonaws.com/input",
+    "TemplateS3BucketURL": "TemplateS3BucketURL",
     "BucketName": "cfnexec-example-test-01234567890123456789"
 }
