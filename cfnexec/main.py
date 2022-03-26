@@ -332,7 +332,6 @@ def create_change_set(stack_name: str, cfn_url: str, param_list: list,
             ChangeSetName=change_set_name,
             StackName=stack_name
         )
-        logger.info("Creation to change set completed successfully!! : {}".format(change_set_name))
     except Exception as e:
         logger.warning(e)
         
